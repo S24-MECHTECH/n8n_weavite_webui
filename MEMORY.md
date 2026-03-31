@@ -72,6 +72,18 @@
 - GraphQL-Templates für Lexware_rag_knowledge und Lexware_import_buffer
 - n8n Credentials ausführlich dokumentiert
 - Backup-Skript erstellt: backup_weaviate.py → ZIP in Lexware_Buchhaltung_Weavite_Backups
+- **SLOW_MODE** für stabile ZIP-Verarbeitung aktiviert
+
+## Processor SLOW_MODE (Stabilität)
+Der Processor (app.py) hat Slow-Mode aktiviert:
+- **Nach jeder Datei**: 0.5s Pause
+- **Nach jedem Weaviate-Insert**: 1.0s Pause
+- **Nach jedem Ollama-Embedding**: 2.0s Pause
+- Konfiguration über Umgebungsvariablen möglich:
+  - `SLOW_MODE=true|false`
+  - `SLOW_DELAY_FILE=0.5`
+  - `SLOW_DELAY_WEAVIATE=1.0`
+  - `SLOW_DELAY_OLLAMA=2.0`
 
 ## Daten-Schutz (Backups)
 ### WICHTIG: Daten vor Löschen schützen!

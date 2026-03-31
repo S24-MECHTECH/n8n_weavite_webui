@@ -276,6 +276,37 @@ priority:int</textarea>
 
     <!-- UPLOAD TAB -->
     <div id="upload" class="tab-content">
+        <!-- Reprocessing Section -->
+        <div class="card" style="border-color: #f0883e;">
+            <h2 style="color: #f0883e;">Daten Reproprozessieren</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">
+                Verarbeite Dateien aus dem TMP-Ordner oder hochgeladene ZIPs neu.
+                Diese Funktion holt Objekte OHNE Vektor und erstellt Embeddings.
+            </p>
+            <div class="row">
+                <div>
+                    <label>Klasse auswählen</label>
+                    <select id="reprocessClass">
+                        <option value="Lexware_import_buffer">Lexware_import_buffer</option>
+                        <option value="Lexware_rag_knowledge">Lexware_rag_knowledge</option>
+                    </select>
+                </div>
+                <div>
+                    <label>TMP-Ordner Pfad</label>
+                    <input type="text" id="reprocessPath" value="/home/mechtech/uploads" placeholder="/home/mechtech/uploads">
+                </div>
+            </div>
+            <div class="actions">
+                <button onclick="reprocessTmpFiles()" style="background:#f0883e;">
+                    📂 TMP-Ordner Reproprozessieren
+                </button>
+                <button onclick="checkTmpFiles()" class="secondary">
+                    🔍 TMP-Dateien prüfen
+                </button>
+            </div>
+            <div id="reprocessStatus" style="margin-top: 15px;"></div>
+        </div>
+
         <div class="card">
             <h2>Upload Files to Weaviate</h2>
             <div class="row">
@@ -1455,6 +1486,87 @@ async function loadSchemaForGraphQL() {
             'Schema: GET ' + getUrl() + '/v1/schema\n';
     } catch (e) {
         document.getElementById('graphqlOutput').textContent = 'Error: ' + e.message;
+    }
+}
+
+// Check TMP files before reprocessing
+async function checkTmpFiles() {
+    const statusDiv = document.getElementById('reprocessStatus');
+    statusDiv.innerHTML = '<div style="color:#58a6ff;">Prüfe TMP-Ordner...</div>';
+
+    try {
+        const processorUrl = document.getElementById('processorUrl').value.trim();
+        const folderPath = document.getElementById('reprocessPath').value.trim();
+
+        // Call processor to list files
+        const res = await fetch(`${processorUrl}/list_tmp?path=${encodeURIComponent(folderPath)}`, {
+            method: 'GET'
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            const files = data.files || [];
+
+            if (files.length === 0) {
+                statusDiv.innerHTML = '<div class="error">Keine Dateien im TMP-Ordner gefunden.</div>';
+            } else {
+                let html = `<div class="success">${files.length} Dateien gefunden:</div><ul>`;
+                files.slice(0, 20).forEach(f => {
+                    html += `<li style="color:#8b949e;font-size:12px;">${f.name} (${f.size} bytes)</li>`;
+                });
+                if (files.length > 20) html += `<li style="color:#6e7681;">... und ${files.length - 20} weitere</li>`;
+                html += '</ul>';
+                statusDiv.innerHTML = html;
+            }
+        } else {
+            statusDiv.innerHTML = '<div class="error">TMP-Ordner nicht erreichbar oder leer.</div>';
+        }
+    } catch (e) {
+        statusDiv.innerHTML = `<div class="error">Fehler: ${e.message}</div>`;
+    }
+}
+
+// Reprocess TMP files via processor
+async function reprocessTmpFiles() {
+    const statusDiv = document.getElementById('reprocessStatus');
+    const className = document.getElementById('reprocessClass').value;
+    const folderPath = document.getElementById('reprocessPath').value.trim();
+
+    if (!confirm(`TMP-Ordner "${folderPath}" in Klasse "${className}" reproprozessieren?\n\nDies kann dauern!`)) {
+        return;
+    }
+
+    statusDiv.innerHTML = '<div style="color:#f0883e;font-weight:bold;">⏳ Reproprozessierung läuft...\nBitte warten, Schritt für Schritt mit Pausen.</div>';
+
+    try {
+        const processorUrl = document.getElementById('processorUrl').value.trim();
+
+        const res = await fetch(`${processorUrl}/process_folder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path: folderPath,
+                class: className
+            })
+        });
+
+        const data = await res.json();
+
+        let html = `<div style="margin-top:15px;">`;
+        html += `<div class="${data.processed > 0 ? 'success' : 'error'}">`;
+        html += `Verarbeitet: ${data.processed} Dateien</div>`;
+
+        if (data.results) {
+            const success = data.results.filter(r => r.status === 'success').length;
+            const failed = data.results.filter(r => r.status === 'error').length;
+            html += `<p style="color:#8b949e;">Erfolgreich: ${success} | Fehlgeschlagen: ${failed}</p>`;
+        }
+
+        html += '</div>';
+        statusDiv.innerHTML = html;
+
+    } catch (e) {
+        statusDiv.innerHTML = `<div class="error">Fehler: ${e.message}</div>`;
     }
 }
 

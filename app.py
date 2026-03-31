@@ -522,6 +522,34 @@ def process_folder():
         'results': results
     })
 
+@app.route('/list_tmp', methods=['GET'])
+def list_tmp():
+    """List files in TMP folder"""
+    folder_path = request.args.get('path', '/home/mechtech/uploads')
+
+    if not os.path.exists(folder_path):
+        return jsonify({'error': 'Folder not found', 'path': folder_path}), 400
+
+    try:
+        files = []
+        for fname in os.listdir(folder_path):
+            fpath = os.path.join(folder_path, fname)
+            if os.path.isfile(fpath):
+                size = os.path.getsize(fpath)
+                files.append({
+                    'name': fname,
+                    'size': size,
+                    'path': fpath
+                })
+
+        return jsonify({
+            'path': folder_path,
+            'count': len(files),
+            'files': files
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/health', methods=['GET'])
 def health():
     """Health check"""

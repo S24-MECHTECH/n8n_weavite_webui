@@ -22,10 +22,81 @@ WEAVIATE_URL = os.environ.get('WEAVIATE_URL', 'http://62.171.136.239:8080')
 BACKUP_DIR = '/home/mechtech/Lexware_Buchhaltung_Weavite_Backups'
 
 # Klassen die gesichert werden sollen (in Reihenfolge!)
+# WICHTIG: Core-Daten werden IMMER gesichert!
 CLASSES_TO_BACKUP = [
-    'Lexware_rag_knowledge',
-    'Lexware_import_buffer'
+    # === CORE DATEN (NIEMALS LÖSCHEN!) ===
+    'Lexware_rag_knowledge',        # RAG Wissen
+    'Lexware_import_buffer',       # Import-Puffer
+    'Lexware_document_text',       # Dokument-Texte
+    'Lexware_document_embeddings',  # Dokument-Embeddings
+    'Lexware_documents',           # Dokumente
+    'Buchhaltung_Master_Brain',    # Buchhaltung Master
+    'Lexware_Buchhaltung',         # Buchhaltung
+    'Lexware_chat_memory',         # Chat-Verlauf
+    # === BUCHHALTUNG ===
+    'Buchungssaetze',              # Buchungssätze
+    'Buchungenfinal',              # Buchungen final
+    'Lexware_buchungssaetze',      # Buchungssätze
+    'Lexware_buchungen_final',     # Buchungen final
+    'Eingangsrechnungen',          # Eingangsrechnungen
+    'Ausgangsrechnungen',          # Ausgangsrechnungen
+    'Lexware_eingangsrechnungen',  # Eingangsrechnungen
+    'Lexware_ausgangsrechnung',    # Ausgangsrechnungen
+    # === BANK & FINANZEN ===
+    'BankkontoKnowledge',          # Bankkonto
+    'KreditkartenkontoKnowledge', # Kreditkarten
+    'KassenkontoKnowledge',        # Kassenkonto
+    'Lxw_bankkonto_knowledge',     # Bankkonto
+    'Lxw_kreditkartenkonto_knowledge', # Kreditkarten
+    'Lxw_kassenkonto_knowledge',   # Kassenkonto
+    'Finanzamt_Schriftverkehr',     # Finanzamt
+    'Finanzamt_Steuerbescheide',   # Steuerbescheide
+    'Lexware_finanzamt_schriftverkehr', # Finanzamt
+    # === STEUER ===
+    'Lexware_steuer_extraktion',   # Steuer-Extraktion
+    'Accountingknowledge',         # Buchhaltungs-Wissen
+    'Lxw_accounting_knowledge',    # Buchhaltungs-Wissen
+    # === LERNEND & AGENT ===
+    'Learningagent',               # Lernender Agent
+    'Learning_agent_memory',       # Lern-Agent Speicher
+    'Lxw_learning_agent',          # Lern-Agent
+    'Agentmemory',                 # Agent-Speicher
+    'Agent_actions',               # Agent-Aktionen
+    'Agent_action_context',        # Agent-Kontext
+    'Agent_action_errors',         # Agent-Fehler
+    'Agent_supabase_query_log',    # Agent-Query-Log
+    'Agent_business_event_log',   # Agent-Business-Log
+    'Agent_chain_of_custody',      # Agent-Protokoll
+    'Agent_governance_log',        # Agent-Governance
+    'Agent_data_access_log',       # Agent-Datenzugriff
+    'Agent_audit_log',             # Agent-Audit
+    'Agent_vector_search_log',     # Agent-Vektor-Suche
+    'Agent_revision_log',          # Agent-Revision
+    'Agent_financial_trace_log',   # Agent-Finanz-Trace
+    # === WAREHOUSE ===
+    'Lxw_auftragsbestaetigungen',  # Auftragsbestätigungen
+    'Lxw_warenwirtschaft_knowledge', # Warenwirtschaft
+    'Warenwirtschaftknowledge',     # Warenwirtschaft
+    # === SOURCE & IMPORT ===
+    'Lexware_source_registry',      # Quell-Registry
+    'Sourceregistry',              # Quell-Registry
+    'Lexware_csv_export',          # CSV Export
+    'V_lexware_csv_export',        # CSV Export View
+    'Lexware_csv_export',          # CSV Export
+    'Importbuffer',                # Import-Puffer
+    # === CHAT ===
+    'Weavite_randy_chat_histories', # Chat-Historien
+    'Lxw_randy_chat_histories',    # Chat-Historien
+    'Chatmemory',                  # Chat-Speicher
+    # === SONSTIGE ===
+    'Ragknowledge',                # RAG Wissen
+    'Documents',                   # Dokumente
+    'Lexware_Schriftverkehr',       # Schriftverkehr
+    'Lexware_finanzamt_schriftverkehr', # Finanzamt
 ]
+
+# Wenn True: Sichert ALLE Klassen aus der Datenbank
+BACKUP_ALL_CLASSES = True
 
 # ============ HILFSFUNKTIONEN ============
 
@@ -39,6 +110,17 @@ def ensure_backup_dir():
         os.makedirs(BACKUP_DIR)
         print(f"✓ Backup-Verzeichnis erstellt: {BACKUP_DIR}")
 
+def get_class_properties(class_name):
+    """Holt die Properties einer Klasse aus dem Schema"""
+    try:
+        response = requests.get(f'{WEAVIATE_URL}/v1/schema/{class_name}', headers=get_headers(), timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return [p['name'] for p in data.get('properties', [])]
+    except Exception as e:
+        pass
+    return []
+
 def get_all_objects(class_name, limit=1000):
     """Holt alle Objekte einer Klasse"""
     all_objects = []
@@ -47,28 +129,23 @@ def get_all_objects(class_name, limit=1000):
 
     print(f"  → Lese {class_name}...")
 
+    # Hole dynamisch die Properties dieser Klasse
+    properties = get_class_properties(class_name)
+
+    # Baue Query mit existierenden Properties
+    props_str = " ".join(properties) if properties else ""
+    additional_str = "_additional { id creationTimeUnix lastUpdateTimeUnix vector }"
+
+    query_template = "{" + \
+        " Get { " + \
+        f"  {class_name}(limit: {batch_size}, offset: OFFSET_PLACEHOLDER) {{ " + \
+        additional_str + " " + props_str + \
+        "  } " + \
+        "}" + \
+    "}"
+
     while True:
-        query = f"""
-        {{
-          Get {{
-            {class_name}(limit: {batch_size}, offset: {offset}) {{
-              _additional {{
-                id
-                creationTimeUnix
-                lastUpdateTimeUnix
-                vector
-              }}
-              text
-              quelle
-              kategorie
-              titel
-              status
-              datum
-              file_type
-            }}
-          }}
-        }}
-        """
+        query = query_template.replace("OFFSET_PLACEHOLDER", str(offset))
 
         try:
             response = requests.post(
@@ -83,6 +160,25 @@ def get_all_objects(class_name, limit=1000):
                 break
 
             data = response.json()
+
+            # Prüfe auf GraphQL Fehler
+            if 'errors' in data:
+                err_msg = data['errors'][0].get('message', 'Unknown')
+                # Falls "text" nicht existiert, versuche ohne spezifische Properties
+                if 'text' in err_msg and properties:
+                    # Nochmal ohne text versuchen
+                    props_str_no_text = " ".join([p for p in properties if p != 'text'])
+                    query_template = "{" + \
+                        " Get { " + \
+                        f"  {class_name}(limit: {batch_size}, offset: OFFSET_PLACEHOLDER) {{ " + \
+                        additional_str + " " + props_str_no_text + \
+                        "  } " + \
+                        "}" + \
+                    "}"
+                    continue
+                print(f"  ✗ GraphQL Fehler: {err_msg[:100]}")
+                break
+
             objects = data.get('data', {}).get('Get', {}).get(class_name, [])
 
             if not objects:
@@ -98,10 +194,21 @@ def get_all_objects(class_name, limit=1000):
                 print(f"  → {offset} Objekte gelesen...")
 
         except Exception as e:
-            print(f"  ✗ Fehler: {e}")
+            print(f"  ✗ Exception: {e}")
             break
 
     return all_objects
+
+def get_all_schema_classes():
+    """Holt alle Klassennamen aus dem Schema"""
+    try:
+        response = requests.get(f'{WEAVIATE_URL}/v1/schema', headers=get_headers(), timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            return [c['class'] for c in data.get('classes', [])]
+    except Exception as e:
+        print(f"  ✗ Fehler beim Holen des Schemas: {e}")
+    return []
 
 def export_class_to_json(class_name, filepath):
     """Exportiert eine Klasse in eine JSON-Datei"""
@@ -142,6 +249,14 @@ def backup_all_classes():
 
     ensure_backup_dir()
 
+    # Welche Klassen sichern?
+    if BACKUP_ALL_CLASSES:
+        classes_to_backup = get_all_schema_classes()
+        print(f"📋 Automatisch erkannte Klassen: {len(classes_to_backup)}")
+    else:
+        classes_to_backup = CLASSES_TO_BACKUP
+        print(f"📋 Konfigurierte Klassen: {len(classes_to_backup)}")
+
     # Zeitstempel für Dateinamen
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     zip_filename = f'weaviate_backup_{timestamp}.zip'
@@ -150,8 +265,9 @@ def backup_all_classes():
     # Erstelle ZIP-Datei
     with zipfile.ZipFile(zip_filepath, 'w', zipfile.ZIP_DEFLATED) as zipf:
         total_objects = 0
+        skipped_classes = []
 
-        for class_name in CLASSES_TO_BACKUP:
+        for class_name in classes_to_backup:
             objects = get_all_objects(class_name)
 
             if objects:
@@ -174,17 +290,29 @@ def backup_all_classes():
 
                 print(f"  ✓ {class_name}: {len(objects)} Objekte")
                 total_objects += len(objects)
+            else:
+                skipped_classes.append(class_name)
+                print(f"  - {class_name}: 0 Objekte (übersprungen)")
 
         # Zusammenfassung in ZIP
         summary_content = f"""Weaviate Backup Zusammenfassung
-{'=' * 40}
+{'=' * 50}
 Datum: {datetime.now().isoformat()}
+Weaviate URL: {WEAVIATE_URL}
+Backup-Modus: {'ALLE KLASSEN' if BACKUP_ALL_CLASSES else 'KONFIGURIERTE KLASSEN'}
 Gesamt Objekte: {total_objects}
+Gesamt Klassen gesichert: {len(classes_to_backup) - len(skipped_classes)}
 
-Klassen:
+Klassen mit Daten:
 """
-        for class_name in CLASSES_TO_BACKUP:
-            summary_content += f"  - {class_name}\n"
+        for class_name in classes_to_backup:
+            if class_name not in skipped_classes:
+                summary_content += f"  ✓ {class_name}\n"
+
+        if skipped_classes:
+            summary_content += f"\nKlassen ohne Daten (übersprungen):\n"
+            for class_name in skipped_classes:
+                summary_content += f"  - {class_name}\n"
 
         zipf.writestr('README.txt', summary_content)
 

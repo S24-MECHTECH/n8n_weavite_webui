@@ -69,3 +69,28 @@
 - Processor unterstützt jetzt .db, .dat, .idx, .f5, .dbf, .btr Dateien (extrahiert für Buchhalter-Analyse)
 - FTP-Upload-Ordner: /home/mechtech/uploads
 - Fortschrittsbalken mit Prozent-Anzeige in WebUI
+- GraphQL-Templates für Lexware_rag_knowledge und Lexware_import_buffer
+- n8n Credentials ausführlich dokumentiert
+
+## Daten-Schutz (Backups)
+### WICHTIG: Daten vor Löschen schützen!
+- **Backup-Skript**: `/home/mechtech/projects/wavite-ui/backup_weaviate.py`
+- **Backup-Ordner**: `/home/mechtech/Lexware_Buchhaltung_Weavite_Backups`
+- **Backup-Format**: ZIP (enthält JSON-Dateien pro Klasse)
+
+### Backup verwenden:
+```bash
+# Backup erstellen (ZIP im angegebenen Ordner)
+python3 backup_weaviate.py
+
+# Backups auflisten
+python3 backup_weaviate.py --list
+
+# Wiederherstellung
+python3 backup_weaviate.py --restore /path/to/backup.zip
+```
+
+### Daten-Embeddings prüfen
+- In "Browse Data": Spalte "Vektor" zeigt ✅ (hat Embedding) oder ❌ (ohne)
+- "Vektorisieren" Button: Nur Objekte OHNE Vektor werden neu vektorisiert
+- Bereits vektorisierte Daten werden NICHT überschrieben

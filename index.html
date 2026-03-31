@@ -161,7 +161,9 @@ priority:int</textarea>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
                     <button onclick="loadObjects()">Load Objects</button>
-                    <button onclick="vectorizeAll()" style="background:#1f6feb;">Vektorisieren</button>
+                    <button onclick="vectorizeAll()" style="background:#238636;color:white;font-weight:bold;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">
+                        📊 Vektorisieren
+                    </button>
                     <button class="danger" onclick="deleteAllObjects()">Delete All</button>
                 </div>
             </div>
@@ -672,23 +674,69 @@ async function loadSchema() {
             return;
         }
 
-        let html = '<table><thead><tr><th>Class</th><th>Properties</th><th>Actions</th></tr></thead><tbody>';
-        data.classes.forEach(c => {
-            const props = c.properties ? c.properties.map(p => `<span class="prop-tag">${p.name}: ${p.dataType[0]}</span>`).join('') : '-';
-            html += `<tr>
-                <td><strong>${c.class}</strong><br><small>${c.description || ''}</small></td>
-                <td><div class="prop-list">${props}</div></td>
-                <td><button class="danger small" onclick="deleteClass('${c.class}')">Delete</button></td>
+        // Alphabetisch sortieren
+        const sortedClasses = [...data.classes].sort((a, b) => a.class.localeCompare(b.class));
+
+        // Hole Objekt-Anzahlen für alle Klassen
+        let classCounts = {};
+        let totalObjects = 0;
+        for (const c of sortedClasses) {
+            try {
+                const countRes = await fetch(`${getUrl()}/v1/graphql`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        query: `{ Aggregate { ${c.class} { meta { count } } } }`
+                    })
+                });
+                const countData = await countRes.json();
+                const count = countData?.data?.Aggregate?.[c.class]?.[0]?.meta?.count || 0;
+                classCounts[c.class] = count;
+                totalObjects += parseInt(count);
+            } catch (e) {
+                classCounts[c.class] = '?';
+            }
+        }
+
+        // Header mit Stats
+        let html = `<div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;">
+            <div style="background:#238636;padding:15px 25px;border-radius:8px;color:white;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${sortedClasses.length}</div>
+                <div style="font-size:11px;">Klassen</div>
+            </div>
+            <div style="background:#1f6feb;padding:15px 25px;border-radius:8px;color:white;text-align:center;">
+                <div style="font-size:24px;font-weight:bold;">${totalObjects}</div>
+                <div style="font-size:11px;">Objekte Total</div>
+            </div>
+        </div>`;
+
+        html += '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#1c2128;"><th style="padding:12px;text-align:left;color:#58a6ff;">Class (A-Z)</th><th style="padding:12px;text-align:center;color:#58a6ff;">Objekte</th><th style="padding:12px;text-align:left;color:#58a6ff;">Properties</th><th style="padding:12px;text-align:center;color:#58a6ff;">Actions</th></tr></thead><tbody>';
+
+        sortedClasses.forEach((c, i) => {
+            const count = classCounts[c.class] || 0;
+            const rowStyle = i % 2 === 0 ? 'background:#0d1117;' : 'background:#161b22;';
+            const props = c.properties ? c.properties.map(p => `<span class="prop-tag">${p.name}</span>`).join('') : '-';
+            const countStyle = count > 0 ? 'color:#3fb950;font-weight:bold;' : 'color:#6e7681;';
+            html += `<tr style="${rowStyle}">
+                <td style="padding:10px;"><strong>${c.class}</strong></td>
+                <td style="padding:10px;text-align:center;"><span style="${countStyle}">${count}</span></td>
+                <td style="padding:10px;"><div class="prop-list">${props}</div></td>
+                <td style="padding:10px;text-align:center;"><button class="danger small" onclick="deleteClass('${c.class}')">Delete</button></td>
             </tr>`;
         });
         html += '</tbody></table>';
         list.innerHTML = html;
 
-        // Update selects
-        const opts = data.classes.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
+        // Update selects - auch sortiert
+        const opts = sortedClasses.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
         document.getElementById('browseClass').innerHTML = '<option value="">-- Select Class --</option>' + opts;
         document.getElementById('uploadClassSelect').innerHTML = '<option value="">-- Select Class --</option>' + opts;
         document.getElementById('addClass').innerHTML = '<option value="">-- Select Class --</option>' + opts;
+
+        // Reprocess-Klasse auch sortieren
+        const reproOpts = sortedClasses.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
+        document.getElementById('reprocessClass').innerHTML = reproOpts;
+
     } catch (e) {
         showMsg('schemaList', `Error: ${e.message}`);
     }

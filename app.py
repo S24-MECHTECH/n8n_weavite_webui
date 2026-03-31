@@ -89,52 +89,78 @@ def get_embedding(text):
     return None
 
 def extract_lexware_db(filepath, ext):
-    """Extract text content from Lexware DB/DAT/IDX/F5 files"""
+    """Extract text content from Lexware DB/DAT/IDX/F5 files - improved version"""
     try:
-        # Try reading as text (works for many .dat and .db files)
         with open(filepath, 'rb') as f:
             raw = f.read()
 
-        # Try UTF-8
-        try:
-            text = raw.decode('utf-8')
-            if len(text.strip()) > 10:
-                return f"[Lexware DB Export]\n{text[:50000]}"
-        except:
-            pass
+        file_size = len(raw)
+        print(f"  DB-Extraktion: {filepath} ({file_size} bytes, ext={ext})")
 
-        # Try Latin-1 (common for old German software)
-        try:
-            text = raw.decode('latin-1')
-            if len(text.strip()) > 10:
-                return f"[Lexware DB Export]\n{text[:50000]}"
-        except:
-            pass
+        # Try many different encodings
+        encodings = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1', 'iso-8859-15',
+                     'cp437', 'cp850', 'cp852', 'macroman', 'utf-16', 'utf-16-le', 'utf-16-be']
 
-        # Try Windows-1252
-        try:
-            text = raw.decode('cp1252')
-            if len(text.strip()) > 10:
-                return f"[Lexware DB Export]\n{text[:50000]}"
-        except:
-            pass
+        for encoding in encodings:
+            try:
+                text = raw.decode(encoding, errors='ignore')
+                # Prüfe ob genug lesbare Zeichen vorhanden sind
+                printable = sum(1 for c in text if c.isprintable() or c in '\n\r\t')
+                if printable > len(text) * 0.5 and printable > 50:
+                    print(f"    ✓ Encoding gefunden: {encoding} ({printable} Zeichen)")
+                    return f"[Lexware {ext.upper()} Export | Encoding: {encoding} | Größe: {file_size}]\n{text[:100000]}"
+            except Exception as e:
+                continue
 
-        # For .idx files - often plain text with structure
-        if ext == 'idx':
-            lines = []
-            for i in range(0, min(len(raw), 10000), 16):
-                chunk = raw[i:i+16]
+        # Fallback: Hex-Dump für die ersten 1000 Bytes
+        hex_dump = raw[:2000].hex()
+        ascii_dump = ''.join(chr(b) if 32 <= b < 127 else '.' for b in raw[:2000])
+
+        # Strukturelle Analyse
+        analysis = []
+        analysis.append(f"[Lexware {ext.upper()} Datei - Struktur-Analyse]")
+        analysis.append(f"Dateigröße: {file_size} bytes")
+        analysis.append(f"")
+        analysis.append("=== Hex-Dump (erste 1000 Bytes) ===")
+        for i in range(0, min(1000, len(raw)), 16):
+            chunk = raw[i:i+16]
+            hex_str = ' '.join(f'{b:02x}' for b in chunk)
+            ascii_str = ''.join(chr(b) if 32 <= b < 127 else '.' for b in chunk)
+            analysis.append(f"{i:08x}  {hex_str:<48}  {ascii_str}")
+
+        analysis.append("")
+        analysis.append("=== ASCII-Dump ===")
+        analysis.append(ascii_dump)
+
+        # Prüfe auf bekannte Patterns
+        patterns_found = []
+        raw_str = raw[:50000]
+
+        # Suche nach Text-Mustern
+        try:
+            for encoding in ['utf-8', 'latin-1']:
                 try:
-                    lines.append(chunk.decode('utf-8', errors='ignore'))
+                    decoded = raw[:10000].decode(encoding, errors='ignore')
+                    # Finde Wörter
+                    import re
+                    words = re.findall(r'\b[A-Za-z]{3,}\b', decoded)
+                    if words:
+                        patterns_found.append(f"Gefundene Wörter (Sample): {', '.join(set(words))[:200]}")
                 except:
                     pass
-            if lines:
-                return f"[Lexware Index]\n" + " ".join(lines)
+        except:
+            pass
 
-        return None
+        if patterns_found:
+            analysis.append("")
+            analysis.append("=== Pattern-Analyse ===")
+            analysis.extend(patterns_found)
+
+        return "\n".join(analysis)
+
     except Exception as e:
         print(f"DB extraction error: {e}")
-        return None
+        return f"[Lexware {ext} - Extraktionsfehler: {e}]"
 
 def extract_text_from_file(filepath, filename):
     """Extract text based on file extension - returns text only"""

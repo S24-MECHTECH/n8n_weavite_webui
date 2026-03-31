@@ -71,12 +71,14 @@
 - Fortschrittsbalken mit Prozent-Anzeige in WebUI
 - GraphQL-Templates für Lexware_rag_knowledge und Lexware_import_buffer
 - n8n Credentials ausführlich dokumentiert
+- Backup-Skript erstellt: backup_weaviate.py → ZIP in Lexware_Buchhaltung_Weavite_Backups
 
 ## Daten-Schutz (Backups)
 ### WICHTIG: Daten vor Löschen schützen!
 - **Backup-Skript**: `/home/mechtech/projects/wavite-ui/backup_weaviate.py`
 - **Backup-Ordner**: `/home/mechtech/Lexware_Buchhaltung_Weavite_Backups`
 - **Backup-Format**: ZIP (enthält JSON-Dateien pro Klasse)
+- **Aktuelle Backups**: ~80 MB (4 ZIPs)
 
 ### Backup verwenden:
 ```bash
@@ -90,7 +92,23 @@ python3 backup_weaviate.py --list
 python3 backup_weaviate.py --restore /path/to/backup.zip
 ```
 
-### Daten-Embeddings prüfen
+## CORE DATEN - NIEMALS LÖSCHEN!
+Siehe Datei: CORE_DATA.md
+
+### Wichtige Core-Klassen (NIEMALS LÖSCHEN!):
+- Lexware_rag_knowledge (Gesetze/Regeln)
+- Buchhaltung_Master_Brain
+- Lexware_Buchhaltung
+- Buchungssaetze, Buchungenfinal
+- Eingangsrechnungen, Ausgangsrechnungen
+- BankkontoKnowledge, KassenkontoKnowledge
+- Agent_*_log (Audit-Trails)
+
+### VERBOTE:
+❌ DELETE ALL = VERBOTEN ohne Backup
+❌ Core-Klassen löschen = VERBOTEN
+
+## Daten-Embeddings prüfen
 - In "Browse Data": Spalte "Vektor" zeigt ✅ (hat Embedding) oder ❌ (ohne)
 - "Vektorisieren" Button: Nur Objekte OHNE Vektor werden neu vektorisiert
 - Bereits vektorisierte Daten werden NICHT überschrieben

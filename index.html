@@ -178,6 +178,33 @@ priority:int</textarea>
 
     <!-- ADD OBJECT TAB -->
     <div id="add" class="tab-content">
+        <!-- n8n Credentials Info -->
+        <div class="card" style="border-color: #238636;">
+            <h2 style="color: #3fb950;">n8n Workflow Credentials</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Diese Credentials für n8n Weaviate Vector Store Node:</p>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="color: #8b949e; font-size: 11px;">Connection Type</label>
+                    <input type="text" value="Custom Connection" readonly style="background: #161b22; color: #3fb950; font-weight: bold;">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="color: #8b949e; font-size: 11px;">HTTP Host</label>
+                    <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
+                </div>
+                <div style="flex: 0 0 100px;">
+                    <label style="color: #8b949e; font-size: 11px;">HTTP Port</label>
+                    <input type="text" value="8080" readonly style="background: #161b22; color: #58a6ff;">
+                </div>
+                <div style="flex: 0 0 100px;">
+                    <label style="color: #8b949e; font-size: 11px;">gRPC Port</label>
+                    <input type="text" value="50051" readonly style="background: #161b22; color: #58a6ff;">
+                </div>
+            </div>
+            <div style="padding: 10px; background: #238636; border-radius: 4px; color: white; font-size: 12px;">
+                ✓ Credential Name: <strong>Weaviate Credentials account</strong> | Kein API Key | Kein Passwort
+            </div>
+        </div>
+
         <div class="card">
             <h2>Add New Object</h2>
             <div class="row">
@@ -195,6 +222,55 @@ priority:int</textarea>
                 <button class="secondary" onclick="testJson()">Validate JSON</button>
             </div>
             <div id="addResult"></div>
+        </div>
+
+        <!-- Object Templates -->
+        <div class="card">
+            <h2>Object Templates (für schnellen Import)</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Klicke auf ein Template um es zu laden:</p>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #58a6ff; margin-bottom: 10px;">Lexware_rag_knowledge Template:</h3>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">{
+  "text": "Rechnung Nr. 2024-001 vom 15.01.2024 über 1.234,56 EUR",
+  "quelle": "rechnung_2024_001.pdf",
+  "kategorie": "Buchhaltung",
+  "titel": "Eingangsrechnung 2024-001"
+}</pre>
+                <button class="secondary small" onclick="loadTemplate('lexware_rag')">Template laden</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #58a6ff; margin-bottom: 10px;">Lexware_import_buffer Template:</h3>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">{
+  "quelle": "import_2024_01.csv",
+  "kategorie": "Import",
+  "status": "pending",
+  "datum": "2024-01-15"
+}</pre>
+                <button class="secondary small" onclick="loadTemplate('lexware_buffer')">Template laden</button>
+            </div>
+        </div>
+
+        <!-- Schema Info für Agenten -->
+        <div class="card" style="border-left: 4px solid #f0883e;">
+            <h2 style="color: #f0883e;">Schema für LLM/Agent Access</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Diese Informationen können von LLM-Agenten verwendet werden:</p>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #58a6ff;">Lexware_rag_knowledge</h4>
+                <pre id="schemaLexwareRag" style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px;">Lade Schema via "Schema" Tab</pre>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <h4 style="color: #58a6ff;">Lexware_import_buffer</h4>
+                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px;">Properties: quelle (text), kategorie (text), status (text), datum (text), text (text)</pre>
+            </div>
+
+            <div style="padding: 12px; background: #1c2128; border-radius: 6px;">
+                <h4 style="color: #8b949e; margin-bottom: 10px;">GraphQL Endpoint:</h4>
+                <code style="color: #3fb950;">http://62.171.136.239:8080/v1/graphql</code>
+            </div>
         </div>
     </div>
 
@@ -382,11 +458,100 @@ priority:int</textarea>
 
     <!-- GRAPHQL TAB -->
     <div id="graphql" class="tab-content">
+        <!-- GraphQL Templates -->
+        <div class="card" style="border-color: #238636;">
+            <h2 style="color: #3fb950;">GraphQL Templates</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Klicke auf ein Template um es zu laden:</p>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #58a6ff; margin-bottom: 8px;">1. Lexware_rag_knowledge - Alle Objekte mit Metadaten:</h4>
+                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
+  Get {
+    Lexware_rag_knowledge(limit: 50) {
+      text
+      quelle
+      kategorie
+      titel
+      _additional {
+        id
+        creationTimeUnix
+        lastUpdateTimeUnix
+      }
+    }
+  }
+}</pre>
+                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_rag_all')">Laden</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #58a6ff; margin-bottom: 8px;">2. Lexware_rag_knowledge - Nach Kategorie filtern:</h4>
+                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
+  Get {
+    Lexware_rag_knowledge(where: {
+      path: ["kategorie"],
+      operator: Equal,
+      valueText: "Buchhaltung"
+    }, limit: 20) {
+      text
+      quelle
+      kategorie
+      titel
+      _additional {
+        id
+      }
+    }
+  }
+}</pre>
+                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_rag_filter')">Laden</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #58a6ff; margin-bottom: 8px;">3. Lexware_import_buffer - Alle Imports:</h4>
+                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
+  Get {
+    Lexware_import_buffer(limit: 50) {
+      quelle
+      kategorie
+      status
+      datum
+      _additional {
+        id
+        creationTimeUnix
+      }
+    }
+  }
+}</pre>
+                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_buffer_all')">Laden</button>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #58a6ff; margin-bottom: 8px;">4. Aggregations - Statistiken:</h4>
+                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
+  Aggregate {
+    Lexware_rag_knowledge {
+      meta {
+        count
+      }
+      groupedBy {
+        value
+        count
+      }
+    }
+  }
+}</pre>
+                <button class="secondary small" onclick="loadGraphQLTemplate('aggregation')">Laden</button>
+            </div>
+        </div>
+
         <div class="card">
-            <h2>GraphQL Query</h2>
+            <h2>GraphQL Query Editor</h2>
             <textarea id="graphqlQuery">{
   Get {
-    YourClass(limit: 10) {
+    Lexware_rag_knowledge(limit: 10) {
+      text
+      quelle
+      kategorie
+      titel
       _additional {
         id
       }
@@ -396,11 +561,34 @@ priority:int</textarea>
             <div class="actions">
                 <button onclick="executeGraphQL()">Execute</button>
                 <button class="secondary" onclick="document.getElementById('graphqlOutput').innerHTML=''">Clear</button>
+                <button class="secondary" onclick="loadSchemaForGraphQL()">Schema laden</button>
             </div>
         </div>
         <div class="card">
             <h2>Result</h2>
             <pre id="graphqlOutput"></pre>
+        </div>
+
+        <!-- LLM/Agent Endpoint Info -->
+        <div class="card" style="border-left: 4px solid #f0883e;">
+            <h2 style="color: #f0883e;">API Endpoints für Agenten</h2>
+            <div style="display: grid; gap: 15px;">
+                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
+                    <h4 style="color: #58a6ff; margin-bottom: 8px;">GraphQL Endpoint</h4>
+                    <code style="color: #3fb950;">POST http://62.171.136.239:8080/v1/graphql</code>
+                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Content-Type: application/json</p>
+                </div>
+                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
+                    <h4 style="color: #58a6ff; margin-bottom: 8px;">REST Objects Endpoint</h4>
+                    <code style="color: #3fb950;">GET/POST http://62.171.136.239:8080/v1/objects</code>
+                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Für CRUD Operationen auf Objekten</p>
+                </div>
+                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
+                    <h4 style="color: #58a6ff; margin-bottom: 8px;">Schema Endpoint</h4>
+                    <code style="color: #3fb950;">GET http://62.171.136.239:8080/v1/schema</code>
+                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Klassen und Properties abfragen</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -1141,6 +1329,132 @@ async function loadVectorInfo() {
         document.getElementById('objectCountInfo').innerHTML = count + ' Objekte in ' + className + allCountsHtml;
     } catch (e) {
         document.getElementById('objectCountInfo').innerHTML = 'Error: ' + e.message;
+    }
+}
+
+// Template functions for Add Object
+function loadTemplate(templateName) {
+    const templates = {
+        'lexware_rag': {
+            class: 'Lexware_rag_knowledge',
+            props: {
+                text: 'Rechnung Nr. 2024-001 vom 15.01.2024 über 1.234,56 EUR netto',
+                quelle: 'rechnung_2024_001.pdf',
+                kategorie: 'Buchhaltung',
+                titel: 'Eingangsrechnung 2024-001'
+            }
+        },
+        'lexware_buffer': {
+            class: 'Lexware_import_buffer',
+            props: {
+                quelle: 'import_2024_01.csv',
+                kategorie: 'Import',
+                status: 'pending',
+                datum: '2024-01-15'
+            }
+        }
+    };
+
+    const template = templates[templateName];
+    if (template) {
+        document.getElementById('addClass').value = template.class;
+        document.getElementById('addProps').value = JSON.stringify(template.props, null, 2);
+    }
+}
+
+// GraphQL Template loader
+function loadGraphQLTemplate(templateName) {
+    const templates = {
+        'lexware_rag_all': `{
+  Get {
+    Lexware_rag_knowledge(limit: 50) {
+      text
+      quelle
+      kategorie
+      titel
+      _additional {
+        id
+        creationTimeUnix
+        lastUpdateTimeUnix
+      }
+    }
+  }
+}`,
+        'lexware_rag_filter': `{
+  Get {
+    Lexware_rag_knowledge(where: {
+      path: ["kategorie"],
+      operator: Equal,
+      valueText: "Buchhaltung"
+    }, limit: 20) {
+      text
+      quelle
+      kategorie
+      titel
+      _additional {
+        id
+      }
+    }
+  }
+}`,
+        'lexware_buffer_all': `{
+  Get {
+    Lexware_import_buffer(limit: 50) {
+      quelle
+      kategorie
+      status
+      datum
+      _additional {
+        id
+        creationTimeUnix
+      }
+    }
+  }
+}`,
+        'aggregation': `{
+  Aggregate {
+    Lexware_rag_knowledge {
+      meta {
+        count
+      }
+    }
+  }
+}`
+    };
+
+    const template = templates[templateName];
+    if (template) {
+        document.getElementById('graphqlQuery').value = template;
+    }
+}
+
+// Load schema info for LLM/Agent access
+async function loadSchemaForGraphQL() {
+    try {
+        const res = await fetch(`${getUrl()}/v1/schema`, { headers: getHeaders() });
+        const data = await res.json();
+
+        let schemaText = '';
+        if (data.classes) {
+            data.classes.forEach(c => {
+                schemaText += `\n=== ${c.class} ===\n`;
+                if (c.properties) {
+                    c.properties.forEach(p => {
+                        schemaText += `  - ${p.name}: ${p.dataType.join(', ')}\n`;
+                    });
+                }
+            });
+        }
+
+        // Show in output
+        document.getElementById('graphqlOutput').textContent =
+            '=== Weaviate Schema ===' + schemaText +
+            '\n\n=== API Endpoints ===\n' +
+            'GraphQL: POST ' + getUrl() + '/v1/graphql\n' +
+            'Objects: GET/POST ' + getUrl() + '/v1/objects\n' +
+            'Schema: GET ' + getUrl() + '/v1/schema\n';
+    } catch (e) {
+        document.getElementById('graphqlOutput').textContent = 'Error: ' + e.message;
     }
 }
 

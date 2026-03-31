@@ -308,58 +308,74 @@ priority:int</textarea>
 
         <!-- CREDENTIALS INFO -->
         <div class="card">
-            <h2>n8n Credentials (für Workflow)</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Aktuelle Weaviate Credentials für n8n:</p>
-            <div class="row">
-                <div>
-                    <label>Credential Name</label>
-                    <input type="text" value="Weaviate Contabo" readonly>
+            <h2>n8n Weaviate Credentials (exakte Einstellungen)</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Kopiere diese Werte direkt in die n8n Credential-Form:</p>
+
+            <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 20px; font-family: monospace;">
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #8b949e; font-size: 11px;">Connection Type</label>
+                    <input type="text" value="Custom Connection" readonly style="background: #161b22; color: #3fb950; font-weight: bold;">
                 </div>
-                <div>
-                    <label>Credential ID</label>
-                    <input type="text" value="VDLgCmqkGcdyHynZ" readonly>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="color: #8b949e; font-size: 11px;">Weaviate Api Key</label>
+                    <input type="text" value="" readonly placeholder="(leer lassen)" style="background: #161b22;">
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="color: #8b949e; font-size: 11px;">Custom Connection HTTP Host *</label>
+                        <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
+                    </div>
+                    <div style="flex: 0 0 100px;">
+                        <label style="color: #8b949e; font-size: 11px;">HTTP Port *</label>
+                        <input type="text" value="8080" readonly style="background: #161b22; color: #58a6ff;">
+                    </div>
+                    <div style="flex: 0 0 80px;">
+                        <label style="color: #8b949e; font-size: 11px;">HTTP Secure</label>
+                        <input type="text" value="Aus" readonly style="background: #161b22; color: #8b949e;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="color: #8b949e; font-size: 11px;">Custom Connection gRPC Host *</label>
+                        <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
+                    </div>
+                    <div style="flex: 0 0 100px;">
+                        <label style="color: #8b949e; font-size: 11px;">gRPC Port *</label>
+                        <input type="text" value="50051" readonly style="background: #161b22; color: #58a6ff;">
+                    </div>
+                    <div style="flex: 0 0 80px;">
+                        <label style="color: #8b949e; font-size: 11px;">gRPC Secure</label>
+                        <input type="text" value="Aus" readonly style="background: #161b22; color: #8b949e;">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: #238636; border-radius: 4px; color: white; font-size: 12px;">
+                    ✓ Kein API Key erforderlich - Weaviate läuft ohne Auth
                 </div>
             </div>
-            <div class="row">
-                <div>
-                    <label>HTTP URL</label>
-                    <input type="text" value="http://62.171.136.239:8080" readonly>
-                </div>
-                <div>
-                    <label>gRPC Host</label>
-                    <input type="text" value="62.171.136.239" readonly>
-                </div>
-                <div>
-                    <label>gRPC Port</label>
-                    <input type="text" value="50051" readonly>
-                </div>
-            </div>
-            <div class="row">
-                <div>
-                    <label>Benutzername</label>
-                    <input type="text" value="Lena" readonly>
-                </div>
-                <div>
-                    <label>Passwort</label>
-                    <input type="password" value="Lena.8473xxx" readonly style="font-family: monospace; letter-spacing: 1px;">
-                </div>
-            </div>
-            <div style="margin-top: 15px; padding: 12px; background: #1c2128; border-radius: 6px; border-left: 3px solid #238636;">
-                <h4 style="color: #58a6ff; margin-bottom: 10px;">Anleitung für n8n Credentials</h4>
-                <ol style="color: #8b949e; font-size: 13px; line-height: 1.8; padding-left: 20px;">
-                    <li>In n8n: <strong>Settings → Credentials</strong> öffnen</li>
-                    <li>Credential "<strong>Weaviate Contabo</strong>" auswählen oder neu erstellen</li>
-                    <li>URL setzen auf: <code style="background: #0d1117; padding: 2px 6px; border-radius: 3px;">http://62.171.136.239:8080</code></li>
-                    <li>Benutzername: <code style="background: #0d1117; padding: 2px 6px; border-radius: 3px;">Lena</code></li>
-                    <li>Passwort: <code style="background: #0d1117; padding: 2px 6px; border-radius: 3px;">Lena.8473xxx</code></li>
-                    <li>Speichern - das Credential sollte <span style="color: #3fb950; font-weight: bold;">grün</span> angezeigt werden</li>
+
+            <div style="margin-top: 20px; padding: 15px; background: #1c2128; border-radius: 6px; border-left: 4px solid #58a6ff;">
+                <h4 style="color: #58a6ff; margin-bottom: 12px;">Schritte in n8n:</h4>
+                <ol style="color: #c9d1d9; font-size: 13px; line-height: 2; padding-left: 20px; margin: 0;">
+                    <li>Öffne <strong>n8n</strong> → Settings → Credentials</li>
+                    <li>Klicke "<strong>Neue Credentials</strong>" → wähle "<strong>Weaviate Api</strong>"</li>
+                    <li>Trage ein: <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #3fb950;">Connection Type = Custom Connection</span></li>
+                    <li><strong>HTTP Host:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">62.171.136.239</span></li>
+                    <li><strong>HTTP Port:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">8080</span></li>
+                    <li><strong>HTTP Secure:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px;">Aus</span></li>
+                    <li><strong>gRPC Host:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">62.171.136.239</span></li>
+                    <li><strong>gRPC Port:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">50051</span></li>
+                    <li><strong>gRPC Secure:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px;">Aus</span></li>
+                    <li>Klicke <strong>Speichern</strong> - Credential wird <span style="color: #3fb950; font-weight: bold;">grün</span></li>
                 </ol>
             </div>
-            <div style="margin-top: 10px; padding: 10px; background: #1c2128; border-radius: 6px; border-left: 3px solid #da3633;">
-                <p style="color: #f85149; font-size: 12px; margin: 0;">
-                    <strong>Wichtig:</strong> Wenn das Credential nicht grün wird, prüfe ob Weaviate Authentifizierung aktiviert hat.
-                    Falls nicht, verwende alternativ die URL ohne Benutzer/Passwort.
-                </p>
+
+            <div style="margin-top: 15px;">
+                <label style="color: #8b949e; font-size: 11px;">Credential ID (nur zur Info)</label>
+                <input type="text" value="VDLgCmqkGcdyHynZ" readonly style="background: #161b22; color: #8b949e; font-size: 12px;">
             </div>
         </div>
     </div>

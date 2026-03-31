@@ -16,12 +16,17 @@
 - **gRPC Port**: 50051
 
 ## n8n Weaviate Credentials
-- **Credential Name**: Weaviate Credentials account
+- **Credential Name**: Weaviate Credentials account (MUSS genau so heißen!)
 - **Credential ID**: VDLgCmqkGcdyHynZ
 - In n8n: Settings → Credentials → Weaviate Credentials account
-- URL: http://62.171.136.239:8080
-- Benutzer: Lena
-- Passwort: Lena.8473xxx
+- Connection Type: Custom Connection
+- HTTP Host: 62.171.136.239
+- HTTP Port: 8080
+- HTTP Secure: Aus
+- gRPC Host: 62.171.136.239
+- gRPC Port: 50051
+- gRPC Secure: Aus
+- Weaviate Api Key: (leer)
 
 ## Weaviate Klassen
 - Lexware_rag_knowledge

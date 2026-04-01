@@ -30,33 +30,39 @@ if not os.path.exists(TEMP_DIR):
     os.makedirs(TEMP_DIR)
 
 # File type classification for Lexware Buchhalter
-# Kategorie 1: Text-Dateien die vektorisiert werden
+# Kategorie 1: Text-Dateien die vektorisiert werden (IMMERS vektorisieren)
 VECTORIZE_TYPES = {'pdf', 'txt', 'csv', 'xml', 'json', 'log', 'html', 'rtf', 'docx', 'xlsx'}
 
-# Kategorie 2: Lexware DB-Dateien die extrahiert & vektorisiert werden (Buchhaltung!)
-LEXWARE_DB_TYPES = {'db', 'dat', 'idx', 'f5', 'dbf', 'btr', 'cdx', 'fpt'}
+# Kategorie 2: Lexware DB-Dateien die extrahiert & vektorisiert werden wenn lesbar
+LEXWARE_DB_TYPES = {'lxd', 'lxa', 'lxv', 'f5', 'db', 'dat', 'idx', 'dbf', 'btr', 'cdx', 'fpt'}
 
-# Kategorie 3: Binary-Dateien die NICHT vektorisiert werden
-NON_VECTORIZE_TYPES = {'lxd', 'lxa', 'lxv', 'bak', 'zip', '7z', 'lbu', 'lbk', 'lex', 'lhd', 'lpd', 'lpe', 'lre', 'lva', 'lza', 'lxs', 'lfo', 'lfa', 'lwe', 'lwa', 'lwi', 'lwo', 'llg', 'lmd', 'lna', 'lso', 'elfo', 'elst', 'pfx', 'mdf', 'ldf', 'ndf', 'trn', 'mt940', 'camt', 'dta', 'sepa'}
+# Kategorie 3: Binary-Dateien die NICHT vektorisiert werden (nur Metadata)
+NON_VECTORIZE_TYPES = {
+    'bak', 'zip', '7z', 'lbu', 'lbk', 'lex',
+    'lhd', 'lpd', 'lpe', 'lre', 'lva', 'lza', 'lxs',
+    'lfo', 'lfa', 'lwe', 'lwa', 'lwi', 'lwo', 'llg',
+    'lmd', 'lna', 'lso', 'elfo', 'elst', 'pfx',
+    'mdf', 'ldf', 'ndf', 'trn', 'mt940', 'camt', 'dta', 'sepa',
+    'binary', 'lexware_binary', 'unknown'
+}
 
 # Mapping für Dateiformate zu Kategorien
 FILE_CATEGORIES = {
-    # Dokumente (vektorisieren)
+    # Dokumente (VEKTORISIEREN)
     'pdf': ('Dokument', True), 'txt': ('Dokument', True), 'csv': ('Buchung', True),
     'xml': ('XML', True), 'json': ('JSON', True), 'log': ('Log', True),
     'html': ('HTML', True), 'rtf': ('Dokument', True), 'docx': ('Dokument', True),
     'xlsx': ('Excel', True),
-    # Lexware DB (vektorisieren für Buchhalter-Analyse)
+    # Lexware DB-Dateien (VEKTORISIEREN wenn lesbar)
+    'lxd': ('Lexware Archiv', True), 'lxa': ('Lexware Archiv', True),
+    'lxv': ('Lexware Verz.', True), 'f5': ('F5 Datenbank', True),
     'db': ('Lexware DB', True), 'dat': ('Lexware Datensatz', True),
-    'idx': ('Lexware Index', True), 'f5': ('F5 Datenbank', True),
-    'dbf': ('dBase', True), 'btr': ('Btrieve', True), 'cdx': ('Index', True),
-    'fpt': ('FoxPro', True),
-    # Binary (nicht vektorisieren)
-    'lxd': ('Lexware Archiv', False), 'lxa': ('Lexware Archiv', False),
-    'lxv': ('Lexware Verz.', False), 'bak': ('Backup', False),
-    'zip': ('Archive', False), '7z': ('Archive', False),
-    'lbu': ('LXBackup', False), 'lbk': ('LXBackup', False),
-    'lex': ('Lexware', False)
+    'idx': ('Lexware Index', True), 'dbf': ('dBase', True),
+    'btr': ('Btrieve', True), 'cdx': ('Index', True), 'fpt': ('FoxPro', True),
+    # Binary (NICHT vektorisieren)
+    'bak': ('Backup', False), 'zip': ('Archive', False), '7z': ('Archive', False),
+    'lbu': ('LXBackup', False), 'lbk': ('LXBackup', False), 'lex': ('Lexware', False),
+    'binary': ('Binary', False), 'lexware_binary': ('Lexware Binary', False), 'unknown': ('Unbekannt', False)
 }
 
 def classify_file(ext):

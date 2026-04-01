@@ -99,7 +99,10 @@
         <div class="card">
             <div class="section-title">
                 <h2>Classes</h2>
-                <button onclick="loadSchema()" class="small">Refresh</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="loadSchema()" class="small">Refresh</button>
+                    <button class="danger small" onclick="deleteSelectedClasses()" id="deleteSelectedBtn" style="display:none;">Delete Selected (0)</button>
+                </div>
             </div>
             <div id="schemaList"></div>
         </div>
@@ -710,7 +713,7 @@ async function loadSchema() {
             </div>
         </div>`;
 
-        html += '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#1c2128;"><th style="padding:12px;text-align:left;color:#58a6ff;">Class (A-Z)</th><th style="padding:12px;text-align:center;color:#58a6ff;">Objekte</th><th style="padding:12px;text-align:left;color:#58a6ff;">Properties</th><th style="padding:12px;text-align:center;color:#58a6ff;">Actions</th></tr></thead><tbody>';
+        html += '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#1c2128;"><th style="padding:12px;text-align:center;color:#58a6ff;width:40px;"><input type="checkbox" id="selectAllClasses" onchange="toggleAllClasses(this)"></th><th style="padding:12px;text-align:left;color:#58a6ff;">Class (A-Z)</th><th style="padding:12px;text-align:center;color:#58a6ff;">Objekte</th><th style="padding:12px;text-align:left;color:#58a6ff;">Properties</th><th style="padding:12px;text-align:center;color:#58a6ff;">Actions</th></tr></thead><tbody>';
 
         sortedClasses.forEach((c, i) => {
             const count = classCounts[c.class] || 0;
@@ -718,10 +721,14 @@ async function loadSchema() {
             const props = c.properties ? c.properties.map(p => `<span class="prop-tag">${p.name}</span>`).join('') : '-';
             const countStyle = count > 0 ? 'color:#3fb950;font-weight:bold;' : 'color:#6e7681;';
             html += `<tr style="${rowStyle}">
+                <td style="padding:10px;text-align:center;"><input type="checkbox" class="classCheckbox" value="${c.class}" onchange="updateDeleteSelectedBtn()"></td>
                 <td style="padding:10px;"><strong>${c.class}</strong></td>
                 <td style="padding:10px;text-align:center;"><span style="${countStyle}">${count}</span></td>
                 <td style="padding:10px;"><div class="prop-list">${props}</div></td>
-                <td style="padding:10px;text-align:center;"><button class="danger small" onclick="deleteClass('${c.class}')">Delete</button></td>
+                <td style="padding:10px;text-align:center;">
+                    <button class="secondary small" onclick="renameClass('${c.class}')" title="Rename">Rename</button>
+                    <button class="danger small" onclick="deleteClass('${c.class}')">Delete</button>
+                </td>
             </tr>`;
         });
         html += '</tbody></table>';
@@ -805,6 +812,109 @@ async function deleteClass(className) {
         }
     } catch (e) {
         alert(e.message);
+    }
+}
+
+function toggleAllClasses(source) {
+    const checkboxes = document.querySelectorAll('.classCheckbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+    updateDeleteSelectedBtn();
+}
+
+function updateDeleteSelectedBtn() {
+    const checkboxes = document.querySelectorAll('.classCheckbox:checked');
+    const btn = document.getElementById('deleteSelectedBtn');
+    if (checkboxes.length > 0) {
+        btn.style.display = 'inline-block';
+        btn.textContent = `Delete Selected (${checkboxes.length})`;
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+async function deleteSelectedClasses() {
+    const checkboxes = document.querySelectorAll('.classCheckbox:checked');
+    if (checkboxes.length === 0) return;
+    const classes = Array.from(checkboxes).map(cb => cb.value);
+    if (!confirm(`Delete ${classes.length} classes?\n\n${classes.join('\n')}\n\nThis will delete ALL objects in each class!`)) return;
+    let deleted = 0;
+    for (const c of classes) {
+        try {
+            const res = await fetch(`${getUrl()}/v1/schema/${c}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (res.ok) deleted++;
+        } catch (e) { console.error(e); }
+    }
+    alert(`${deleted}/${classes.length} classes deleted`);
+    loadSchema();
+}
+
+async function renameClass(oldName) {
+    const newName = prompt(`Rename class "${oldName}" to:`, oldName);
+    if (!newName || newName === oldName) return;
+    if (!confirm(`Rename "${oldName}" to "${newName}"?\n\nThis will create a new class with the same schema and move all objects.`)) return;
+
+    try {
+        // Get class schema
+        const schemaRes = await fetch(`${getUrl()}/v1/schema/${oldName}`, { headers: getHeaders() });
+        if (!schemaRes.ok) { alert('Error getting class schema'); return; }
+        const classData = await schemaRes.json();
+
+        // Create new class with new name
+        const newClassData = {
+            class: newName,
+            description: classData.description || '',
+            properties: classData.properties || []
+        };
+        const createRes = await fetch(`${getUrl()}/v1/schema`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(newClassData)
+        });
+        if (!createRes.ok) { alert('Error creating new class'); return; }
+
+        // Move all objects
+        let moved = 0;
+        let offset = 0;
+        const batchSize = 100;
+        while (true) {
+            const batchRes = await fetch(`${getUrl()}/v1/graphql`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    query: `{ Get { ${oldName}(limit: ${batchSize}, offset: ${offset}) { * } } }`
+                })
+            });
+            const batchData = await batchRes.json();
+            const objects = batchData.data?.Get?.[oldName] || [];
+            if (objects.length === 0) break;
+
+            for (const obj of objects) {
+                delete obj._additional;
+                delete obj.id;
+                await fetch(`${getUrl()}/v1/objects`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ class: newName, properties: obj })
+                });
+                moved++;
+            }
+            offset += batchSize;
+            if (objects.length < batchSize) break;
+        }
+
+        // Delete old class
+        await fetch(`${getUrl()}/v1/schema/${oldName}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+
+        alert(`Renamed "${oldName}" to "${newName}".\n${moved} objects moved.`);
+        loadSchema();
+    } catch (e) {
+        alert('Error renaming class: ' + e.message);
     }
 }
 

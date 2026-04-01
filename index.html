@@ -161,9 +161,6 @@ priority:int</textarea>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
                     <button onclick="loadObjects()">Load Objects</button>
-                    <button onclick="vectorizeAll()" style="background:#238636;color:white;font-weight:bold;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">
-                        📊 Vektorisieren
-                    </button>
                     <button class="danger" onclick="deleteAllObjects()">Delete All</button>
                 </div>
             </div>
@@ -180,33 +177,6 @@ priority:int</textarea>
 
     <!-- ADD OBJECT TAB -->
     <div id="add" class="tab-content">
-        <!-- n8n Credentials Info -->
-        <div class="card" style="border-color: #238636;">
-            <h2 style="color: #3fb950;">n8n Workflow Credentials</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Diese Credentials für n8n Weaviate Vector Store Node:</p>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="color: #8b949e; font-size: 11px;">Connection Type</label>
-                    <input type="text" value="Custom Connection" readonly style="background: #161b22; color: #3fb950; font-weight: bold;">
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label style="color: #8b949e; font-size: 11px;">HTTP Host</label>
-                    <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
-                </div>
-                <div style="flex: 0 0 100px;">
-                    <label style="color: #8b949e; font-size: 11px;">HTTP Port</label>
-                    <input type="text" value="8080" readonly style="background: #161b22; color: #58a6ff;">
-                </div>
-                <div style="flex: 0 0 100px;">
-                    <label style="color: #8b949e; font-size: 11px;">gRPC Port</label>
-                    <input type="text" value="50051" readonly style="background: #161b22; color: #58a6ff;">
-                </div>
-            </div>
-            <div style="padding: 10px; background: #238636; border-radius: 4px; color: white; font-size: 12px;">
-                ✓ Credential Name: <strong>Weaviate Credentials account</strong> | Kein API Key | Kein Passwort
-            </div>
-        </div>
-
         <div class="card">
             <h2>Add New Object</h2>
             <div class="row">
@@ -225,90 +195,10 @@ priority:int</textarea>
             </div>
             <div id="addResult"></div>
         </div>
-
-        <!-- Object Templates -->
-        <div class="card">
-            <h2>Object Templates (für schnellen Import)</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Klicke auf ein Template um es zu laden:</p>
-
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #58a6ff; margin-bottom: 10px;">Lexware_rag_knowledge Template:</h3>
-                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">{
-  "text": "Rechnung Nr. 2024-001 vom 15.01.2024 über 1.234,56 EUR",
-  "quelle": "rechnung_2024_001.pdf",
-  "kategorie": "Buchhaltung",
-  "titel": "Eingangsrechnung 2024-001"
-}</pre>
-                <button class="secondary small" onclick="loadTemplate('lexware_rag')">Template laden</button>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h3 style="color: #58a6ff; margin-bottom: 10px;">Lexware_import_buffer Template:</h3>
-                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px; overflow-x: auto;">{
-  "quelle": "import_2024_01.csv",
-  "kategorie": "Import",
-  "status": "pending",
-  "datum": "2024-01-15"
-}</pre>
-                <button class="secondary small" onclick="loadTemplate('lexware_buffer')">Template laden</button>
-            </div>
-        </div>
-
-        <!-- Schema Info für Agenten -->
-        <div class="card" style="border-left: 4px solid #f0883e;">
-            <h2 style="color: #f0883e;">Schema für LLM/Agent Access</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Diese Informationen können von LLM-Agenten verwendet werden:</p>
-
-            <div style="margin-bottom: 15px;">
-                <h4 style="color: #58a6ff;">Lexware_rag_knowledge</h4>
-                <pre id="schemaLexwareRag" style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px;">Lade Schema via "Schema" Tab</pre>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <h4 style="color: #58a6ff;">Lexware_import_buffer</h4>
-                <pre style="background: #0d1117; padding: 15px; border-radius: 6px; font-size: 12px;">Properties: quelle (text), kategorie (text), status (text), datum (text), text (text)</pre>
-            </div>
-
-            <div style="padding: 12px; background: #1c2128; border-radius: 6px;">
-                <h4 style="color: #8b949e; margin-bottom: 10px;">GraphQL Endpoint:</h4>
-                <code style="color: #3fb950;">http://62.171.136.239:8080/v1/graphql</code>
-            </div>
-        </div>
     </div>
 
     <!-- UPLOAD TAB -->
     <div id="upload" class="tab-content">
-        <!-- Reprocessing Section -->
-        <div class="card" style="border-color: #f0883e;">
-            <h2 style="color: #f0883e;">Daten Reproprozessieren</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">
-                Verarbeite Dateien aus dem TMP-Ordner oder hochgeladene ZIPs neu.
-                Diese Funktion holt Objekte OHNE Vektor und erstellt Embeddings.
-            </p>
-            <div class="row">
-                <div>
-                    <label>Klasse auswählen</label>
-                    <select id="reprocessClass">
-                        <option value="Lexware_import_buffer">Lexware_import_buffer</option>
-                        <option value="Lexware_rag_knowledge">Lexware_rag_knowledge</option>
-                    </select>
-                </div>
-                <div>
-                    <label>TMP-Ordner Pfad</label>
-                    <input type="text" id="reprocessPath" value="/home/mechtech/uploads" placeholder="/home/mechtech/uploads">
-                </div>
-            </div>
-            <div class="actions">
-                <button onclick="reprocessTmpFiles()" style="background:#f0883e;">
-                    📂 TMP-Ordner Reproprozessieren
-                </button>
-                <button onclick="checkTmpFiles()" class="secondary">
-                    🔍 TMP-Dateien prüfen
-                </button>
-            </div>
-            <div id="reprocessStatus" style="margin-top: 15px;"></div>
-        </div>
-
         <div class="card">
             <h2>Upload Files to Weaviate</h2>
             <div class="row">
@@ -417,174 +307,42 @@ priority:int</textarea>
 
         <!-- CREDENTIALS INFO -->
         <div class="card">
-            <h2>n8n Weaviate Credentials (exakte Einstellungen)</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Kopiere diese Werte direkt in die n8n Credential-Form:</p>
-
-            <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 20px; font-family: monospace;">
-                <div style="margin-bottom: 15px;">
-                    <label style="color: #8b949e; font-size: 11px;">Connection Type</label>
-                    <input type="text" value="Custom Connection" readonly style="background: #161b22; color: #3fb950; font-weight: bold;">
+            <h2>n8n Credentials (für Workflow)</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Aktuelle Weaviate Credentials für n8n:</p>
+            <div class="row">
+                <div>
+                    <label>Credential Name</label>
+                    <input type="text" value="Weaviate Contabo" readonly>
                 </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="color: #8b949e; font-size: 11px;">Weaviate Api Key</label>
-                    <input type="text" value="" readonly placeholder="(leer lassen)" style="background: #161b22;">
-                </div>
-
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label style="color: #8b949e; font-size: 11px;">Custom Connection HTTP Host *</label>
-                        <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
-                    </div>
-                    <div style="flex: 0 0 100px;">
-                        <label style="color: #8b949e; font-size: 11px;">HTTP Port *</label>
-                        <input type="text" value="8080" readonly style="background: #161b22; color: #58a6ff;">
-                    </div>
-                    <div style="flex: 0 0 80px;">
-                        <label style="color: #8b949e; font-size: 11px;">HTTP Secure</label>
-                        <input type="text" value="Aus" readonly style="background: #161b22; color: #8b949e;">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label style="color: #8b949e; font-size: 11px;">Custom Connection gRPC Host *</label>
-                        <input type="text" value="62.171.136.239" readonly style="background: #161b22; color: #58a6ff;">
-                    </div>
-                    <div style="flex: 0 0 100px;">
-                        <label style="color: #8b949e; font-size: 11px;">gRPC Port *</label>
-                        <input type="text" value="50051" readonly style="background: #161b22; color: #58a6ff;">
-                    </div>
-                    <div style="flex: 0 0 80px;">
-                        <label style="color: #8b949e; font-size: 11px;">gRPC Secure</label>
-                        <input type="text" value="Aus" readonly style="background: #161b22; color: #8b949e;">
-                    </div>
-                </div>
-
-                <div style="margin-top: 15px; padding: 10px; background: #238636; border-radius: 4px; color: white; font-size: 12px;">
-                    ✓ Kein API Key erforderlich - Weaviate läuft ohne Auth
+                <div>
+                    <label>Credential ID</label>
+                    <input type="text" value="YT0vQoXxHwVvjQIz" readonly>
                 </div>
             </div>
-
-            <div style="margin-top: 20px; padding: 15px; background: #1c2128; border-radius: 6px; border-left: 4px solid #58a6ff;">
-                <h4 style="color: #58a6ff; margin-bottom: 12px;">Schritte in n8n:</h4>
-                <ol style="color: #c9d1d9; font-size: 13px; line-height: 2; padding-left: 20px; margin: 0;">
-                    <li>Öffne <strong>n8n</strong> → Settings → Credentials</li>
-                    <li>Klicke "<strong>Neue Credentials</strong>" → wähle "<strong>Weaviate Api</strong>"</li>
-                    <li>Trage ein: <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #3fb950;">Connection Type = Custom Connection</span></li>
-                    <li><strong>HTTP Host:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">62.171.136.239</span></li>
-                    <li><strong>HTTP Port:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">8080</span></li>
-                    <li><strong>HTTP Secure:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px;">Aus</span></li>
-                    <li><strong>gRPC Host:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">62.171.136.239</span></li>
-                    <li><strong>gRPC Port:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px; color: #58a6ff;">50051</span></li>
-                    <li><strong>gRPC Secure:</strong> <span style="background: #0d1117; padding: 2px 8px; border-radius: 3px;">Aus</span></li>
-                    <li>Klicke <strong>Speichern</strong> - Credential wird <span style="color: #3fb950; font-weight: bold;">grün</span></li>
-                </ol>
-            </div>
-
-            <div style="margin-top: 15px;">
-                <label style="color: #8b949e; font-size: 11px;">Credential ID (nur zur Info)</label>
-                <input type="text" value="VDLgCmqkGcdyHynZ" readonly style="background: #161b22; color: #8b949e; font-size: 12px;">
+            <div class="row">
+                <div>
+                    <label>HTTP URL</label>
+                    <input type="text" value="http://62.171.136.239:8080" readonly>
+                </div>
+                <div>
+                    <label>gRPC Host</label>
+                    <input type="text" value="62.171.136.239" readonly>
+                </div>
+                <div>
+                    <label>gRPC Port</label>
+                    <input type="text" value="50051" readonly>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- GRAPHQL TAB -->
     <div id="graphql" class="tab-content">
-        <!-- GraphQL Templates -->
-        <div class="card" style="border-color: #238636;">
-            <h2 style="color: #3fb950;">GraphQL Templates</h2>
-            <p style="color: #8b949e; margin-bottom: 15px;">Klicke auf ein Template um es zu laden:</p>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #58a6ff; margin-bottom: 8px;">1. Lexware_rag_knowledge - Alle Objekte mit Metadaten:</h4>
-                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
-  Get {
-    Lexware_rag_knowledge(limit: 50) {
-      text
-      quelle
-      kategorie
-      titel
-      _additional {
-        id
-        creationTimeUnix
-        lastUpdateTimeUnix
-      }
-    }
-  }
-}</pre>
-                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_rag_all')">Laden</button>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #58a6ff; margin-bottom: 8px;">2. Lexware_rag_knowledge - Nach Kategorie filtern:</h4>
-                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
-  Get {
-    Lexware_rag_knowledge(where: {
-      path: ["kategorie"],
-      operator: Equal,
-      valueText: "Buchhaltung"
-    }, limit: 20) {
-      text
-      quelle
-      kategorie
-      titel
-      _additional {
-        id
-      }
-    }
-  }
-}</pre>
-                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_rag_filter')">Laden</button>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #58a6ff; margin-bottom: 8px;">3. Lexware_import_buffer - Alle Imports:</h4>
-                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
-  Get {
-    Lexware_import_buffer(limit: 50) {
-      quelle
-      kategorie
-      status
-      datum
-      _additional {
-        id
-        creationTimeUnix
-      }
-    }
-  }
-}</pre>
-                <button class="secondary small" onclick="loadGraphQLTemplate('lexware_buffer_all')">Laden</button>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <h4 style="color: #58a6ff; margin-bottom: 8px;">4. Aggregations - Statistiken:</h4>
-                <pre style="background: #0d1117; padding: 12px; border-radius: 6px; font-size: 11px; overflow-x: auto;">{
-  Aggregate {
-    Lexware_rag_knowledge {
-      meta {
-        count
-      }
-      groupedBy {
-        value
-        count
-      }
-    }
-  }
-}</pre>
-                <button class="secondary small" onclick="loadGraphQLTemplate('aggregation')">Laden</button>
-            </div>
-        </div>
-
         <div class="card">
-            <h2>GraphQL Query Editor</h2>
+            <h2>GraphQL Query</h2>
             <textarea id="graphqlQuery">{
   Get {
-    Lexware_rag_knowledge(limit: 10) {
-      text
-      quelle
-      kategorie
-      titel
+    YourClass(limit: 10) {
       _additional {
         id
       }
@@ -594,34 +352,11 @@ priority:int</textarea>
             <div class="actions">
                 <button onclick="executeGraphQL()">Execute</button>
                 <button class="secondary" onclick="document.getElementById('graphqlOutput').innerHTML=''">Clear</button>
-                <button class="secondary" onclick="loadSchemaForGraphQL()">Schema laden</button>
             </div>
         </div>
         <div class="card">
             <h2>Result</h2>
             <pre id="graphqlOutput"></pre>
-        </div>
-
-        <!-- LLM/Agent Endpoint Info -->
-        <div class="card" style="border-left: 4px solid #f0883e;">
-            <h2 style="color: #f0883e;">API Endpoints für Agenten</h2>
-            <div style="display: grid; gap: 15px;">
-                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
-                    <h4 style="color: #58a6ff; margin-bottom: 8px;">GraphQL Endpoint</h4>
-                    <code style="color: #3fb950;">POST http://62.171.136.239:8080/v1/graphql</code>
-                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Content-Type: application/json</p>
-                </div>
-                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
-                    <h4 style="color: #58a6ff; margin-bottom: 8px;">REST Objects Endpoint</h4>
-                    <code style="color: #3fb950;">GET/POST http://62.171.136.239:8080/v1/objects</code>
-                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Für CRUD Operationen auf Objekten</p>
-                </div>
-                <div style="padding: 12px; background: #0d1117; border-radius: 6px;">
-                    <h4 style="color: #58a6ff; margin-bottom: 8px;">Schema Endpoint</h4>
-                    <code style="color: #3fb950;">GET http://62.171.136.239:8080/v1/schema</code>
-                    <p style="color: #8b949e; font-size: 12px; margin-top: 5px;">Klassen und Properties abfragen</p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -674,69 +409,23 @@ async function loadSchema() {
             return;
         }
 
-        // Alphabetisch sortieren
-        const sortedClasses = [...data.classes].sort((a, b) => a.class.localeCompare(b.class));
-
-        // Hole Objekt-Anzahlen für alle Klassen
-        let classCounts = {};
-        let totalObjects = 0;
-        for (const c of sortedClasses) {
-            try {
-                const countRes = await fetch(`${getUrl()}/v1/graphql`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        query: `{ Aggregate { ${c.class} { meta { count } } } }`
-                    })
-                });
-                const countData = await countRes.json();
-                const count = countData?.data?.Aggregate?.[c.class]?.[0]?.meta?.count || 0;
-                classCounts[c.class] = count;
-                totalObjects += parseInt(count);
-            } catch (e) {
-                classCounts[c.class] = '?';
-            }
-        }
-
-        // Header mit Stats
-        let html = `<div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;">
-            <div style="background:#238636;padding:15px 25px;border-radius:8px;color:white;text-align:center;">
-                <div style="font-size:24px;font-weight:bold;">${sortedClasses.length}</div>
-                <div style="font-size:11px;">Klassen</div>
-            </div>
-            <div style="background:#1f6feb;padding:15px 25px;border-radius:8px;color:white;text-align:center;">
-                <div style="font-size:24px;font-weight:bold;">${totalObjects}</div>
-                <div style="font-size:11px;">Objekte Total</div>
-            </div>
-        </div>`;
-
-        html += '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#1c2128;"><th style="padding:12px;text-align:left;color:#58a6ff;">Class (A-Z)</th><th style="padding:12px;text-align:center;color:#58a6ff;">Objekte</th><th style="padding:12px;text-align:left;color:#58a6ff;">Properties</th><th style="padding:12px;text-align:center;color:#58a6ff;">Actions</th></tr></thead><tbody>';
-
-        sortedClasses.forEach((c, i) => {
-            const count = classCounts[c.class] || 0;
-            const rowStyle = i % 2 === 0 ? 'background:#0d1117;' : 'background:#161b22;';
-            const props = c.properties ? c.properties.map(p => `<span class="prop-tag">${p.name}</span>`).join('') : '-';
-            const countStyle = count > 0 ? 'color:#3fb950;font-weight:bold;' : 'color:#6e7681;';
-            html += `<tr style="${rowStyle}">
-                <td style="padding:10px;"><strong>${c.class}</strong></td>
-                <td style="padding:10px;text-align:center;"><span style="${countStyle}">${count}</span></td>
-                <td style="padding:10px;"><div class="prop-list">${props}</div></td>
-                <td style="padding:10px;text-align:center;"><button class="danger small" onclick="deleteClass('${c.class}')">Delete</button></td>
+        let html = '<table><thead><tr><th>Class</th><th>Properties</th><th>Actions</th></tr></thead><tbody>';
+        data.classes.forEach(c => {
+            const props = c.properties ? c.properties.map(p => `<span class="prop-tag">${p.name}: ${p.dataType[0]}</span>`).join('') : '-';
+            html += `<tr>
+                <td><strong>${c.class}</strong><br><small>${c.description || ''}</small></td>
+                <td><div class="prop-list">${props}</div></td>
+                <td><button class="danger small" onclick="deleteClass('${c.class}')">Delete</button></td>
             </tr>`;
         });
         html += '</tbody></table>';
         list.innerHTML = html;
 
-        // Update selects - auch sortiert
-        const opts = sortedClasses.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
+        // Update selects
+        const opts = data.classes.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
         document.getElementById('browseClass').innerHTML = '<option value="">-- Select Class --</option>' + opts;
         document.getElementById('uploadClassSelect').innerHTML = '<option value="">-- Select Class --</option>' + opts;
         document.getElementById('addClass').innerHTML = '<option value="">-- Select Class --</option>' + opts;
-
-        // Reprocess-Klasse auch sortieren
-        const reproOpts = sortedClasses.map(c => `<option value="${c.class}">${c.class}</option>`).join('');
-        document.getElementById('reprocessClass').innerHTML = reproOpts;
-
     } catch (e) {
         showMsg('schemaList', `Error: ${e.message}`);
     }
@@ -882,14 +571,9 @@ async function loadObjects() {
         }
 
         // Properties aus dem ersten Objekt holen
-        let props = Object.keys(firstObj).filter(k => k !== '_additional');
+        const props = Object.keys(firstObj).filter(k => k !== '_additional');
 
-        // Fallback: Wenn keine Props gefunden, verwende Standard-Properties
-        if (props.length === 0) {
-            props = ['text', 'quelle', 'titel', 'kategorie', 'file_type'];
-        }
-
-        const query = `{ Get { ${className}(limit: ${limit}) { _additional { id vector } ${props.join(' ')} } } }`;
+        const query = `{ Get { ${className}(limit: ${limit}) { _additional { id } ${props.join(' ')} } } }`;
 
         const res = await fetch(`${getUrl()}/v1/graphql`, {
             method: 'POST',
@@ -907,15 +591,15 @@ async function loadObjects() {
         }
 
         // Erweiterte Tabelle mit allen wichtigen Infos
-        let html = '<div style="overflow-x:auto;"><table style="width:100%;min-width:1400px;font-size:13px;border-collapse:collapse;"><thead><tr>';
-        html += '<th style="background:#238636;padding:12px;">ID</th>';
-        html += '<th style="padding:12px;">Quelle</th>';
-        html += '<th style="padding:12px;">Typ</th>';
-        html += '<th style="padding:12px;">Kategorie</th>';
-        html += '<th style="padding:12px;">Titel</th>';
-        html += '<th style="padding:12px;min-width:400px;">Inhalt</th>';
-        html += '<th style="background:#58a6ff;padding:12px;">Vektor</th>';
-        html += '<th style="padding:12px;">Action</th>';
+        let html = '<table style="width:100%;overflow-x:auto;font-size:12px;"><thead><tr>';
+        html += '<th style="background:#238636;">ID</th>';
+        html += '<th>Quelle</th>';
+        html += '<th>Typ</th>';
+        html += '<th>Kategorie</th>';
+        html += '<th>Titel</th>';
+        html += '<th>Inhalt (Vorschau)</th>';
+        html += '<th style="background:#58a6ff;">Vektor</th>';
+        html += '<th>Action</th>';
         html += '</tr></thead><tbody>';
 
         for (const obj of objs) {
@@ -925,22 +609,21 @@ async function loadObjects() {
             const kategorie = obj.kategorie || '-';
             const titel = obj.titel || '-';
             const text = obj.text || '';
-            // Zeilenumbrüche für bessere Lesbarkeit
-            const textPreview = text.substring(0, 500).replace(/\n/g, ' ').replace(/  +/g, ' ').trim() + (text.length > 500 ? ' ...' : '');
+            const textPreview = text.substring(0, 100).replace(/\n/g, ' ') + (text.length > 100 ? '...' : '');
             const hasVector = obj._additional?.vector ? '✅ Ja' : '❌ Nein';
 
-            html += `<tr style="border-bottom:1px solid #30363d;">`;
-            html += `<td style="padding:10px;font-family:monospace;font-size:11px;word-break:break-all;">${id.substring(0, 12)}...</td>`;
-            html += `<td style="padding:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${quelle}</td>`;
-            html += `<td style="padding:10px;text-align:center;">${fileType}</td>`;
-            html += `<td style="padding:10px;"><span style="background:#30363d;padding:3px 8px;border-radius:4px;font-size:11px;">${kategorie}</span></td>`;
-            html += `<td style="padding:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${titel}</td>`;
-            html += `<td style="padding:10px;color:#8b949e;max-width:500px;word-wrap:break-word;">${textPreview}</td>`;
-            html += `<td style="padding:10px;text-align:center;color:${hasVector.includes('Ja') ? '#3fb950' : '#f85149'};font-weight:bold;">${hasVector}</td>`;
-            html += `<td style="padding:10px;text-align:center;"><button class="danger small" onclick="deleteObject('${className}', '${id}')">X</button></td>`;
+            html += `<tr>`;
+            html += `<td class="object-id" style="font-family:monospace;">${id.substring(0, 8)}...</td>`;
+            html += `<td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">${quelle}</td>`;
+            html += `<td>${fileType}</td>`;
+            html += `<td><span style="background:#30363d;padding:2px 6px;border-radius:4px;">${kategorie}</span></td>`;
+            html += `<td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">${titel}</td>`;
+            html += `<td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;color:#8b949e;">${textPreview}</td>`;
+            html += `<td style="color:${hasVector.includes('Ja') ? '#3fb950' : '#f85149'};font-weight:bold;">${hasVector}</td>`;
+            html += `<td><button class="danger small" onclick="deleteObject('${className}', '${id}')">X</button></td>`;
             html += `</tr>`;
         }
-        html += '</tbody></table></div>';
+        html += '</tbody></table>';
         document.getElementById('objectsList').innerHTML = html;
     } catch (e) {
         document.getElementById('objectsList').innerHTML = `<div class="error">${e.message}</div>`;
@@ -957,128 +640,6 @@ async function deleteObject(className, id) {
         else alert('Error deleting object');
     } catch (e) {
         alert(e.message);
-    }
-}
-
-async function vectorizeAll() {
-    const className = document.getElementById('browseClass').value;
-    if (!className) {
-        alert('Bitte wählen Sie eine Klasse aus');
-        return;
-    }
-
-    const processorUrl = document.getElementById('processorUrl').value.trim();
-    const limit = parseInt(document.getElementById('browseLimit').value) || 100;
-
-    // Erst die Objekte holen
-    const query = `
-    {
-        Get {
-            ${className}(limit: ${limit}) {
-                _additional {
-                    id
-                }
-                text
-                quelle
-                titel
-                kategorie
-                file_type
-            }
-        }
-    }`;
-
-    try {
-        const res = await fetch(`${getUrl()}/v1/graphql`, {
-            method: 'POST',
-            headers: getHeaders(),
-            body: JSON.stringify({ query })
-        });
-        const data = await res.json();
-        const objs = data.data?.Get?.[className] || [];
-
-        if (objs.length === 0) {
-            alert('Keine Objekte zum Vektorisieren gefunden');
-            return;
-        }
-
-        // Ollama URL holen vom Processor
-        let ollamaUrl = 'http://62.171.136.239:11434';
-        try {
-            const healthRes = await fetch(`${processorUrl}/health`);
-            const health = await healthRes.json();
-            ollamaUrl = health.ollama || ollamaUrl;
-        } catch (e) {
-            console.log('Using default Ollama URL');
-        }
-
-        // Filtere nur Objekte ohne Vektor
-        const objsToVectorize = objs.filter(obj => !obj._additional?.vector);
-        if (objsToVectorize.length === 0) {
-            document.getElementById('objectsList').innerHTML = '<p style="color:#3fb950;padding:20px;">✅ Alle Objekte sind bereits vektorisiert!</p>';
-            return;
-        }
-
-        // Progress anzeigen
-        const progressDiv = document.getElementById('objectsList');
-        progressDiv.innerHTML = `<div style="padding:20px;text-align:center;">
-            <p>Vektorisiere ${objsToVectorize.length} Objekte (ohne Vektor)...</p>
-            <div id="vecProgress" style="background:#30363d;height:20px;border-radius:4px;overflow:hidden;">
-                <div id="vecProgressBar" style="background:#238636;height:100%;width:0%;transition:width 0.3s;"></div>
-            </div>
-            <p id="vecStatus">0 / ${objsToVectorize.length}</p>
-        </div>`;
-
-        let successCount = 0;
-        for (let i = 0; i < objsToVectorize.length; i++) {
-            const obj = objsToVectorize[i];
-            const text = obj.text || '';
-            const id = obj._additional?.id;
-
-            if (!text || text.length < 5) continue;
-
-            // Kurze Pause zwischen Requests (Ollama ist langsam)
-            await new Promise(r => setTimeout(r, 200));
-
-            try {
-                // Ollama Embedding holen
-                const embeddingRes = await fetch(`${ollamaUrl}/api/embeddings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'nomic-embed-text',
-                        prompt: text.substring(0, 8000)
-                    })
-                });
-
-                if (embeddingRes.ok) {
-                    const embeddingData = await embeddingRes.json();
-                    const vector = embeddingData.embedding;
-
-                    // Objekt mit Vektor aktualisieren
-                    const updateRes = await fetch(`${getUrl()}/v1/objects/${className}/${id}`, {
-                        method: 'PUT',
-                        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ vector })
-                    });
-
-                    if (updateRes.ok) successCount++;
-                }
-            } catch (e) {
-                console.error(`Error vectorizing object ${i}:`, e);
-            }
-
-            // Progress updaten
-            const percent = ((i + 1) / objsToVectorize.length) * 100;
-            const progressBar = document.getElementById('vecProgressBar');
-            const progressStatus = document.getElementById('vecStatus');
-            if (progressBar) progressBar.style.width = percent + '%';
-            if (progressStatus) progressStatus.textContent = `${i + 1} / ${objsToVectorize.length}`;
-        }
-
-        alert(`${successCount} von ${objsToVectorize.length} Objekten vektorisiert!`);
-        loadObjects(); // Neu laden
-    } catch (e) {
-        alert('Fehler beim Vektorisieren: ' + e.message);
     }
 }
 
@@ -1408,213 +969,6 @@ async function loadVectorInfo() {
         document.getElementById('objectCountInfo').innerHTML = count + ' Objekte in ' + className + allCountsHtml;
     } catch (e) {
         document.getElementById('objectCountInfo').innerHTML = 'Error: ' + e.message;
-    }
-}
-
-// Template functions for Add Object
-function loadTemplate(templateName) {
-    const templates = {
-        'lexware_rag': {
-            class: 'Lexware_rag_knowledge',
-            props: {
-                text: 'Rechnung Nr. 2024-001 vom 15.01.2024 über 1.234,56 EUR netto',
-                quelle: 'rechnung_2024_001.pdf',
-                kategorie: 'Buchhaltung',
-                titel: 'Eingangsrechnung 2024-001'
-            }
-        },
-        'lexware_buffer': {
-            class: 'Lexware_import_buffer',
-            props: {
-                quelle: 'import_2024_01.csv',
-                kategorie: 'Import',
-                status: 'pending',
-                datum: '2024-01-15'
-            }
-        }
-    };
-
-    const template = templates[templateName];
-    if (template) {
-        document.getElementById('addClass').value = template.class;
-        document.getElementById('addProps').value = JSON.stringify(template.props, null, 2);
-    }
-}
-
-// GraphQL Template loader
-function loadGraphQLTemplate(templateName) {
-    const templates = {
-        'lexware_rag_all': `{
-  Get {
-    Lexware_rag_knowledge(limit: 50) {
-      text
-      quelle
-      kategorie
-      titel
-      _additional {
-        id
-        creationTimeUnix
-        lastUpdateTimeUnix
-      }
-    }
-  }
-}`,
-        'lexware_rag_filter': `{
-  Get {
-    Lexware_rag_knowledge(where: {
-      path: ["kategorie"],
-      operator: Equal,
-      valueText: "Buchhaltung"
-    }, limit: 20) {
-      text
-      quelle
-      kategorie
-      titel
-      _additional {
-        id
-      }
-    }
-  }
-}`,
-        'lexware_buffer_all': `{
-  Get {
-    Lexware_import_buffer(limit: 50) {
-      quelle
-      kategorie
-      status
-      datum
-      _additional {
-        id
-        creationTimeUnix
-      }
-    }
-  }
-}`,
-        'aggregation': `{
-  Aggregate {
-    Lexware_rag_knowledge {
-      meta {
-        count
-      }
-    }
-  }
-}`
-    };
-
-    const template = templates[templateName];
-    if (template) {
-        document.getElementById('graphqlQuery').value = template;
-    }
-}
-
-// Load schema info for LLM/Agent access
-async function loadSchemaForGraphQL() {
-    try {
-        const res = await fetch(`${getUrl()}/v1/schema`, { headers: getHeaders() });
-        const data = await res.json();
-
-        let schemaText = '';
-        if (data.classes) {
-            data.classes.forEach(c => {
-                schemaText += `\n=== ${c.class} ===\n`;
-                if (c.properties) {
-                    c.properties.forEach(p => {
-                        schemaText += `  - ${p.name}: ${p.dataType.join(', ')}\n`;
-                    });
-                }
-            });
-        }
-
-        // Show in output
-        document.getElementById('graphqlOutput').textContent =
-            '=== Weaviate Schema ===' + schemaText +
-            '\n\n=== API Endpoints ===\n' +
-            'GraphQL: POST ' + getUrl() + '/v1/graphql\n' +
-            'Objects: GET/POST ' + getUrl() + '/v1/objects\n' +
-            'Schema: GET ' + getUrl() + '/v1/schema\n';
-    } catch (e) {
-        document.getElementById('graphqlOutput').textContent = 'Error: ' + e.message;
-    }
-}
-
-// Check TMP files before reprocessing
-async function checkTmpFiles() {
-    const statusDiv = document.getElementById('reprocessStatus');
-    statusDiv.innerHTML = '<div style="color:#58a6ff;">Prüfe TMP-Ordner...</div>';
-
-    try {
-        const processorUrl = document.getElementById('processorUrl').value.trim();
-        const folderPath = document.getElementById('reprocessPath').value.trim();
-
-        // Call processor to list files
-        const res = await fetch(`${processorUrl}/list_tmp?path=${encodeURIComponent(folderPath)}`, {
-            method: 'GET'
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            const files = data.files || [];
-
-            if (files.length === 0) {
-                statusDiv.innerHTML = '<div class="error">Keine Dateien im TMP-Ordner gefunden.</div>';
-            } else {
-                let html = `<div class="success">${files.length} Dateien gefunden:</div><ul>`;
-                files.slice(0, 20).forEach(f => {
-                    html += `<li style="color:#8b949e;font-size:12px;">${f.name} (${f.size} bytes)</li>`;
-                });
-                if (files.length > 20) html += `<li style="color:#6e7681;">... und ${files.length - 20} weitere</li>`;
-                html += '</ul>';
-                statusDiv.innerHTML = html;
-            }
-        } else {
-            statusDiv.innerHTML = '<div class="error">TMP-Ordner nicht erreichbar oder leer.</div>';
-        }
-    } catch (e) {
-        statusDiv.innerHTML = `<div class="error">Fehler: ${e.message}</div>`;
-    }
-}
-
-// Reprocess TMP files via processor
-async function reprocessTmpFiles() {
-    const statusDiv = document.getElementById('reprocessStatus');
-    const className = document.getElementById('reprocessClass').value;
-    const folderPath = document.getElementById('reprocessPath').value.trim();
-
-    if (!confirm(`TMP-Ordner "${folderPath}" in Klasse "${className}" reproprozessieren?\n\nDies kann dauern!`)) {
-        return;
-    }
-
-    statusDiv.innerHTML = '<div style="color:#f0883e;font-weight:bold;">⏳ Reproprozessierung läuft...\nBitte warten, Schritt für Schritt mit Pausen.</div>';
-
-    try {
-        const processorUrl = document.getElementById('processorUrl').value.trim();
-
-        const res = await fetch(`${processorUrl}/process_folder`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                path: folderPath,
-                class: className
-            })
-        });
-
-        const data = await res.json();
-
-        let html = `<div style="margin-top:15px;">`;
-        html += `<div class="${data.processed > 0 ? 'success' : 'error'}">`;
-        html += `Verarbeitet: ${data.processed} Dateien</div>`;
-
-        if (data.results) {
-            const success = data.results.filter(r => r.status === 'success').length;
-            const failed = data.results.filter(r => r.status === 'error').length;
-            html += `<p style="color:#8b949e;">Erfolgreich: ${success} | Fehlgeschlagen: ${failed}</p>`;
-        }
-
-        html += '</div>';
-        statusDiv.innerHTML = html;
-
-    } catch (e) {
-        statusDiv.innerHTML = `<div class="error">Fehler: ${e.message}</div>`;
     }
 }
 

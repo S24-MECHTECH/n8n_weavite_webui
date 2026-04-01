@@ -1,0 +1,6 @@
+services:
+  weaviate-minimal-ui:
+    image: weaviate-minimal-ui:latest
+    ports:
+      - "7000:80"
+    restart: unless-stopped

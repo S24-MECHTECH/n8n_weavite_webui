@@ -1,0 +1,409 @@
+{
+  "id": "BnSgeDwufUviP7EU",
+  "name": "RAG_WEAVITE",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "849a3b68-6ad0-49bc-8f20-e1855b1dead1",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        240,
+        144
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "r8M0d8DoTbboRjCe",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "7a95eaa5-6d3b-4be4-a4c8-1f263439101e",
+      "name": "OpenAI Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        768,
+        336
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "r8M0d8DoTbboRjCe",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Du bist ein hochpr\u00e4ziser Inforationen Beschaffer!\n\nDu darfst ausschlie\u00dflich antworten, wenn die  \u201elexware_rag_knowledge\u201c datenbanktabelle relevante Dokumente liefert. Nutze ausschlie\u00dflich die Inhalte aus dieser Datenbank-tabelle.\n\nRegeln f\u00fcr die Verarbeitung:\n- Verwende ausschlie\u00dflich die Inhalte aus den Vektortreffern.\n- Nutze Metadaten (Titel, Kategorie, Quelle), um Relevanz und Kontext zu bestimmen.\n- Wenn mehrere Treffer vorhanden sind, fasse sie strukturiert zusammen.\n- Priorisiere die Treffer entsprechend der Relevanz (unter Ber\u00fccksichtigung des Rerankers).\n- Keine Spekulationen oder Modellwissen.\n- Keine erfundenen Gesetze, Paragraphen oder steuerlichen Regeln.\n- Keine Interpretationen au\u00dferhalb der Dokumente.\n- Nutze die Terminologie aus Buchhaltung, Bilanzwesen, Steuerrecht, GoBD, HGB, IFRS, AO, UStG, EStG.\n- Wenn Dokumente widerspr\u00fcchliche Aussagen enthalten, weise explizit darauf hin.\n- Formuliere die Antwort so, dass sie f\u00fcr einen Buchhalter oder Steuerfachangestellten sofort nutzbar ist.\n"
+        }
+      },
+      "id": "96ab9d95-6279-4c00-88ca-62fa83052d6e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "maxTries": 5,
+      "position": [
+        400,
+        -112
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.7,
+      "alwaysOutputData": true,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "### Replace credentials.",
+        "height": 80
+      },
+      "id": "a6f41438-a4eb-4977-b9e7-86bc39174a1c",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        576
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "stelle dem user alle daten zu denen er etwas anfragt zur verf\u00fcgung, lasse nichts aus.",
+        "weaviateCollection": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Lexware_rag_knowledge",
+          "cachedResultName": "Lexware_rag_knowledge"
+        },
+        "topK": 50,
+        "options": {}
+      },
+      "id": "0cf9e42d-d505-4aae-a446-e7bbdd156a00",
+      "name": "Weaviate Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreWeaviate",
+      "position": [
+        400,
+        144
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "weaviateApi": {
+          "id": "YT0vQoXxHwVvjQIz",
+          "name": "Weaviate Contabo"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "mxbai-embed-large:latest"
+      },
+      "id": "dc025dd5-753f-4f90-b4ec-d7d8080a6fc3",
+      "name": "Embeddings Ollama",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "position": [
+        768,
+        -144
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": false,
+      "credentials": {
+        "ollamaApi": {
+          "id": "0TmT2yNM2T3DgqVp",
+          "name": "Ollama account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1GG8D19chUT3c2oVPwmztIazsKLeU16fU"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "id": "e2290c28-14ab-4bca-b381-6dcfcab9df48",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        -208,
+        -352
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zz10b2AZS74uOND8",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{$json[\"id\"]}}"
+        },
+        "options": {}
+      },
+      "id": "2b738640-e205-4ef3-9ce2-c41ff6227532",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        80,
+        -352
+      ],
+      "retryOnFail": true,
+      "typeVersion": 3,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "zz10b2AZS74uOND8",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "id": "51c996a4-0547-4316-a4f8-02f536837217",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "position": [
+        384,
+        -528
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "ece59a06-b5db-4784-9384-32c6cab52223",
+      "name": "Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "position": [
+        768,
+        -352
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "weaviateCollection": {
+          "__rl": true,
+          "mode": "list",
+          "value": "Lexware_rag_knowledge",
+          "cachedResultName": "Lexware_rag_knowledge"
+        },
+        "options": {}
+      },
+      "id": "efc7121e-a462-4b00-afe0-788a99aa3be7",
+      "name": "Weaviate Vector Store1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreWeaviate",
+      "position": [
+        400,
+        -352
+      ],
+      "typeVersion": 1.3,
+      "credentials": {
+        "weaviateApi": {
+          "id": "YT0vQoXxHwVvjQIz",
+          "name": "Weaviate Contabo"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "6d146d9f-eb19-4d2a-ab3d-ed60c1e4070b",
+      "name": "Reranker Cohere",
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "position": [
+        480,
+        384
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "cohereApi": {
+          "id": "WUDBn5NXtVE7PrkJ",
+          "name": "CohereApi Reranker"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2d3a1f8b-82ac-495d-b20e-d180ca48397c",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        128,
+        -112
+      ],
+      "webhookId": "1a2590bc-c1f6-4d9a-9759-e5fd3d51191c",
+      "typeVersion": 1.4,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Weaviate Vector Store": {
+      "ai_vectorStore": [
+        []
+      ],
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Weaviate Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Weaviate Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Weaviate Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Weaviate Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reranker Cohere": {
+      "ai_reranker": [
+        [
+          {
+            "node": "Weaviate Vector Store",
+            "type": "ai_reranker",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

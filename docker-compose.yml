@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  weaviate-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile.processor
+    ports:
+      - "5000:5000"
+    environment:
+      - WEAVIATE_URL=http://weavite-weaviate-1:8080
+      - OLLAMA_URL=http://ollama-docker:11434
+      - CLASS_NAME=Lexware_rag_knowledge
+      - OLLAMA_MODEL=nomic-embed-text
+    restart: unless-stopped
+
+  weaviate-ui:
+    image: weaviate-minimal-ui:latest
+    ports:
+      - "7000:80"
+    restart: unless-stopped
+    depends_on:
+      - weaviate-processor

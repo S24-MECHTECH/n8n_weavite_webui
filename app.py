@@ -205,7 +205,7 @@ def extract_text_from_file(filepath, filename):
             images = convert_from_path(filepath)
             text = ''
             for img in images:
-                text += pytesseract.image_to_string(img, lang='de') or ''
+                text += pytesseract.image_to_string(img, lang='deu+eng') or ''
             return text
         except Exception as e2:
             print(f"OCR error: {e2}")

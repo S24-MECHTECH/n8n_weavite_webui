@@ -76,7 +76,7 @@
 - **Batch Delete**: Mehrere Klassen gleichzeitig löschen
 - **Class Rename**: Klassen umbenennen mit allen Objekten
 - **Edit Description**: Beschreibung nachträglich ändern
-- **OCR**: pytesseract für gescannte PDFs (benötigt tesseract-ocr installiert)
+- **OCR**: pytesseract für gescannte PDFs (Sprachen: deu + eng)
 
 ## WebUI Features (Port 7000)
 - Schema-Tabelle mit Checkboxen für Batch-Select

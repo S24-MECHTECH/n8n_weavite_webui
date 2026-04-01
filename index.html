@@ -167,6 +167,9 @@ priority:int</textarea>
                     <button onclick="vectorizeAll()" style="background:#238636;color:white;font-weight:bold;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">
                         📊 Vektorisieren
                     </button>
+                    <button onclick="reOcrAll()" style="background:#f0883e;color:white;font-weight:bold;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;">
+                        🔄 Re-OCR (kurzer Text)
+                    </button>
                     <button class="danger" onclick="deleteAllObjects()">Delete All</button>
                 </div>
             </div>
@@ -727,10 +730,10 @@ async function loadSchema() {
                 <td style="padding:10px;text-align:center;"><span style="${countStyle}">${count}</span></td>
                 <td style="padding:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;">${desc}</td>
                 <td style="padding:10px;"><div class="prop-list">${props}</div></td>
-                <td style="padding:10px;text-align:center;">
-                    <button onclick="editClassDescription('${c.class}', '${(c.description || '').replace(/'/g, "\\'")}')" style="background:#58a6ff;color:white;font-weight:bold;padding:6px 14px;border-radius:6px;border:none;cursor:pointer;margin-right:6px;">Desc</button>
-                    <button onclick="renameClass('${c.class}')" style="background:#238636;color:white;font-weight:bold;padding:6px 14px;border-radius:6px;border:none;cursor:pointer;margin-right:6px;">Rename</button>
-                    <button class="danger small" onclick="deleteClass('${c.class}')">Delete</button>
+                <td style="padding:12px;text-align:center;min-width:200px;">
+                    <button onclick="editClassDescription('${c.class}', '${(c.description || '').replace(/'/g, "\\'")}')" style="background:#58a6ff;color:white;font-weight:bold;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;margin:2px;">Desc</button>
+                    <button onclick="renameClass('${c.class}')" style="background:#238636;color:white;font-weight:bold;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;margin:2px;">Rename</button>
+                    <button class="danger" onclick="deleteClass('${c.class}')" style="margin:2px;">Delete</button>
                 </td>
             </tr>`;
         });
@@ -1225,6 +1228,74 @@ async function vectorizeAll() {
         loadObjects(); // Neu laden
     } catch (e) {
         alert('Fehler beim Vektorisieren: ' + e.message);
+    }
+}
+
+async function reOcrAll() {
+    const className = document.getElementById('browseClass').value;
+    if (!className) { alert('Wähle eine Klasse'); return; }
+
+    const processorUrl = document.getElementById('processorUrl').value.trim();
+
+    // Hole alle Objekte mit kurzem Text
+    const query = `{ Get { ${className}(limit: 1000) { _additional { id vector } text quelle titel kategorie file_type } } }`;
+    try {
+        const res = await fetch(`${getUrl()}/v1/graphql`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        const objs = data.data?.Get?.[className] || [];
+
+        // Filtere Objekte mit kurzem Text (< 50 Zeichen) aber OHNE Vektor
+        const shortTextObjs = objs.filter(obj => {
+            const txt = obj.text || '';
+            return txt.length < 50 && !obj._additional?.vector;
+        });
+
+        if (shortTextObjs.length === 0) {
+            alert('Keine Objekte mit kurzem Text ohne Vektor gefunden');
+            return;
+        }
+
+        if (!confirm(`${shortTextObjs.length} Objekte haben kurzen Text ohne Vektor.\n\nDiese werden nochmal durch den Processor (OCR) geschickt.\n\nFortfahren?`)) return;
+
+        let processed = 0;
+        for (const obj of shortTextObjs) {
+            // Extrahiere Text nochmal mit Processor (für OCR)
+            try {
+                const procRes = await fetch(`${processorUrl}/process_folder`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        path: obj.quelle ? obj.quelle.replace(/[^/]*$/, '') : '/tmp',
+                        class: className
+                    })
+                });
+                //即使 OCR fehlschlägt, setzeEmbedding
+                const text = obj.text || '';
+                const embeddingRes = await fetch('http://62.171.136.239:11434/api/embeddings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model: 'nomic-embed-text', prompt: text.substring(0, 8000) })
+                });
+                if (embeddingRes.ok) {
+                    const emb = await embeddingRes.json();
+                    await fetch(`${getUrl()}/v1/objects/${className}/${obj._additional.id}`, {
+                        method: 'PUT',
+                        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ vector: emb.embedding })
+                    });
+                }
+                processed++;
+            } catch (e) { console.error(e); }
+            await new Promise(r => setTimeout(r, 500));
+        }
+        alert(`${processed} Objekte neu vektorisiert!`);
+        loadObjects();
+    } catch (e) {
+        alert('Fehler: ' + e.message);
     }
 }
 

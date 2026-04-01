@@ -66,13 +66,24 @@
 - n8n kann Weaviate nicht erreichen -> Host-IP statt localhost verwenden
 
 ## Letzte Änderungen
-- Processor unterstützt jetzt .db, .dat, .idx, .f5, .dbf, .btr Dateien (extrahiert für Buchhalter-Analyse)
+- Processor unterstützt jetzt .db, .dat, .idx, .f5, .dbf, .btr, .cdx, .fpt, .lxd, .lxa, .lxv (vektorisieren)
 - FTP-Upload-Ordner: /home/mechtech/uploads
 - Fortschrittsbalken mit Prozent-Anzeige in WebUI
 - GraphQL-Templates für Lexware_rag_knowledge und Lexware_import_buffer
 - n8n Credentials ausführlich dokumentiert
 - Backup-Skript erstellt: backup_weaviate.py → ZIP in Lexware_Buchhaltung_Weavite_Backups
 - **SLOW_MODE** für stabile ZIP-Verarbeitung aktiviert
+- **Batch Delete**: Mehrere Klassen gleichzeitig löschen
+- **Class Rename**: Klassen umbenennen mit allen Objekten
+- **Edit Description**: Beschreibung nachträglich ändern
+- **OCR**: pytesseract für gescannte PDFs (benötigt tesseract-ocr installiert)
+
+## WebUI Features (Port 7000)
+- Schema-Tabelle mit Checkboxen für Batch-Select
+- Delete Selected Button (erscheint bei Auswahl)
+- Rename Button (grün)
+- Edit Description Button (blau)
+- Vektor-Spalte in Objects-Tabelle (grün=vektorisiert, rot=ohne)
 
 ## Processor SLOW_MODE (Stabilität)
 Der Processor (app.py) hat Slow-Mode aktiviert:

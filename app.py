@@ -31,7 +31,15 @@ if not os.path.exists(TEMP_DIR):
 
 # File type classification for Lexware Buchhalter
 # Kategorie 1: Text-Dateien die vektorisiert werden (IMMERS vektorisieren)
-VECTORIZE_TYPES = {'pdf', 'txt', 'csv', 'xml', 'json', 'log', 'html', 'rtf', 'docx', 'xlsx'}
+VECTORIZE_TYPES = {
+    'pdf', 'txt', 'csv', 'xml', 'json', 'log', 'html', 'rtf', 'docx', 'xlsx',
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff',  # Bilder für OCR
+    'msg', 'eml',  # Emails
+    'htm', 'html', 'dot', 'dotx',  # Word/HTML
+    'xsl', 'xls',  # Excel alt
+    'lsf', 'vmb',  # Lexware Formulare
+    'lxf',  # Lexware Exchange Format
+}
 
 # Kategorie 2: Lexware DB-Dateien die extrahiert & vektorisiert werden wenn lesbar
 LEXWARE_DB_TYPES = {'lxd', 'lxa', 'lxv', 'f5', 'db', 'dat', 'idx', 'dbf', 'btr', 'cdx', 'fpt'}
@@ -43,16 +51,25 @@ NON_VECTORIZE_TYPES = {
     'lfo', 'lfa', 'lwe', 'lwa', 'lwi', 'lwo', 'llg',
     'lmd', 'lna', 'lso', 'elfo', 'elst', 'pfx',
     'mdf', 'ldf', 'ndf', 'trn', 'mt940', 'camt', 'dta', 'sepa',
-    'binary', 'lexware_binary', 'unknown'
+    'binary', 'lexware_binary', 'unknown', 'exe', 'dll'
 }
 
 # Mapping für Dateiformate zu Kategorien
 FILE_CATEGORIES = {
     # Dokumente (VEKTORISIEREN)
-    'pdf': ('Dokument', True), 'txt': ('Dokument', True), 'csv': ('Buchung', True),
+    'pdf': ('PDF Dokument', True), 'txt': ('Text', True), 'csv': ('CSV Buchung', True),
     'xml': ('XML', True), 'json': ('JSON', True), 'log': ('Log', True),
-    'html': ('HTML', True), 'rtf': ('Dokument', True), 'docx': ('Dokument', True),
-    'xlsx': ('Excel', True),
+    'html': ('HTML', True), 'htm': ('HTML', True), 'rtf': ('RTF Dokument', True),
+    'docx': ('Word Dokument', True), 'dotx': ('Word Vorlage', True), 'dot': ('Word Vorlage', True),
+    'xlsx': ('Excel', True), 'xls': ('Excel alt', True), 'xsl': ('Excel alt', True),
+    # Bilder (VEKTORISIEREN mit OCR)
+    'jpg': ('Bild (OCR)', True), 'jpeg': ('Bild (OCR)', True), 'png': ('Bild (OCR)', True),
+    'gif': ('Bild (OCR)', True), 'bmp': ('Bild (OCR)', True), 'tiff': ('Bild (OCR)', True),
+    # Emails (VEKTORISIEREN)
+    'msg': ('Outlook Email', True), 'eml': ('Email', True),
+    # Lexware (VEKTORISIEREN)
+    'lsf': ('Lexware Formular', True), 'vmb': ('Lexware VMBackup', True),
+    'lxf': ('Lexware Exchange', True),
     # Lexware DB-Dateien (VEKTORISIEREN wenn lesbar)
     'lxd': ('Lexware Archiv', True), 'lxa': ('Lexware Archiv', True),
     'lxv': ('Lexware Verz.', True), 'f5': ('F5 Datenbank', True),
@@ -241,35 +258,42 @@ def extract_text_from_file(filepath, filename):
             return text
 
     elif ext == 'msg':
-        # Outlook .msg Dateien - versuche Text zu extrahieren
+        # Outlook .msg Dateien - extrahiere Email Header und Body
         try:
-            # Versuche mit python-docmsg oder OLE File
             import olefile
             ole = olefile.OleFileIO(filepath)
-            # Suche nach RTF oder Plain Text
+            text_parts = []
+            # Suche nach Email-Streams
             for stream in ole.listdir():
-                if '0037001F' in stream or '0030001F' in stream:  # PR_BODY / PR_RTF
+                stream_name = '\\'.join([chr(c) if 32 <= c < 127 else '' for c in stream])
+                try:
                     data = ole.openstream(stream).read()
-                    try:
-                        return data.decode('utf-8', errors='ignore')
-                    except:
-                        pass
+                    # Versuche als Text zu dekodieren
+                    for enc in ['utf-8', 'latin-1', 'cp1252', 'utf-16']:
+                        try:
+                            decoded = data.decode(enc, errors='ignore')
+                            if len(decoded) > 10 and any(c.isalpha() for c in decoded):
+                                text_parts.append(decoded[:5000])
+                                break
+                        except:
+                            continue
+                except:
+                    pass
             ole.close()
-        except:
-            pass
-        # Fallback: binäre Datei als Text versuchen
-        try:
-            with open(filepath, 'rb') as f:
-                data = f.read()
-                # Versuche verschiedene Encodings
-                for enc in ['utf-8', 'latin-1', 'cp1252']:
-                    try:
-                        return data.decode(enc, errors='ignore')
-                    except:
-                        continue
-        except:
-            pass
-        return f"[Outlook MSG: {filename}]"
+            if text_parts:
+                return '\n---\n'.join(text_parts[:5])  # Max 5 Streams
+        except Exception as e:
+            print(f"MSG extraction error: {e}")
+        return f"[Outlook Email: {filename}]"
+
+    elif ext == 'eml':
+        # Standard Email Format
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            content = f.read()
+            # Entferne Email Headers für besseren Text
+            if '\n\n' in content:
+                return content.split('\n\n', 1)[1][:50000]
+            return content[:50000]
 
     elif ext == 'json':
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
@@ -288,6 +312,50 @@ def extract_text_from_file(filepath, filename):
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
             soup = BeautifulSoup(f.read(), 'html.parser')
             return soup.get_text()
+
+    elif ext in ['htm', 'html']:
+        from bs4 import BeautifulSoup
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            soup = BeautifulSoup(f.read(), 'html.parser')
+            return soup.get_text()
+
+    # OCR für Bilder
+    elif ext in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif']:
+        try:
+            import pytesseract
+            from PIL import Image
+            img = Image.open(filepath)
+            text = pytesseract.image_to_string(img, lang='deu+eng')
+            if text.strip():
+                return text
+        except Exception as e:
+            print(f"OCR error for {filename}: {e}")
+        return f"[Bild OCR fehlgeschlagen: {filename}]"
+
+    # Excel alte Version
+    elif ext in ['xls', 'xsl']:
+        try:
+            import xlrd
+            wb = xlrd.open_workbook(filepath)
+            text = ''
+            for sheet in wb.sheets():
+                text += f"=== Sheet: {sheet.name} ===\n"
+                for row in range(sheet.nrows):
+                    text += ' '.join([str(c) for c in sheet.row_values(row)]) + '\n'
+            return text
+        except Exception as e:
+            print(f"xls error: {e}")
+        return f"[Excel alt: {filename}]"
+
+    # Lexware LSF Formular
+    elif ext in ['lsf', 'vmb']:
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            return f.read()
+
+    # Lexware Exchange Format
+    elif ext == 'lxf':
+        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+            return f.read()
 
     elif ext == 'rtf':
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:

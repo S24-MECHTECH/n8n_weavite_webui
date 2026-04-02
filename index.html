@@ -97,17 +97,6 @@
     <!-- SCHEMA TAB -->
     <div id="schema" class="tab-content active">
         <div class="card">
-            <div class="section-title">
-                <h2>Classes</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button onclick="loadSchema()" class="small">Refresh</button>
-                    <button class="danger small" onclick="deleteSelectedClasses()" id="deleteSelectedBtn" style="display:none;">Delete Selected (0)</button>
-                </div>
-            </div>
-            <div id="schemaList"></div>
-        </div>
-
-        <div class="card">
             <h2>Create New Class</h2>
             <div class="row">
                 <div>
@@ -145,6 +134,17 @@ priority:int</textarea>
             <div class="actions">
                 <button onclick="createClass()">Create Class</button>
             </div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">
+                <h2>Classes</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="loadSchema()" class="small">Refresh</button>
+                    <button class="danger small" onclick="deleteSelectedClasses()" id="deleteSelectedBtn" style="display:none;">Delete Selected (0)</button>
+                </div>
+            </div>
+            <div id="schemaList"></div>
         </div>
     </div>
 

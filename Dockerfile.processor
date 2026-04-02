@@ -5,6 +5,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     tesseract-ocr \
     tesseract-ocr-deu \
+    tesseract-ocr-eng \
     poppler-utils \
     unzip \
     libmagic1 \
@@ -23,7 +24,8 @@ RUN pip install --no-cache-dir \
     beautifulsoup4 \
     python-docx \
     openpyxl \
-    olefile
+    olefile \
+    xlrd
 
 COPY app.py /app/
 
